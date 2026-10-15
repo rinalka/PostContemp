@@ -7,7 +7,7 @@ public class mods {
 
 	mods () {
 	}
-	 static void solidColor(PApplet p) {//pause the strokes, copy rgba as set in CF with the color picer -  over the appropriate screen,
+	 static void solidColor(PApplet p) {//pause the strokes, copy rgba as set in CF with the color picker -  over the appropriate screen,
 			CF2.runRB.activate(2);
 			switch (CF.whichCanvas) {
 			 case 0: //pic*****************************************************************nice effect - but not proper color mixing
@@ -35,19 +35,46 @@ public class mods {
 				 	GB.thePicture.updatePixels();
 				 break;
 			 case 1: //alt
-
+				 	GB.altPicture.loadPixels();
+				 	for (int x = 0; x < GB.thePicture.width; x++) {
+				 		  for (int y = 0; y < GB.altPicture.height; y++ ) {
+				 		    // Calculate the 1D pixel location
+				 		    int loc = x + y*GB.altPicture.width;
+				 		    // Get the R,G,B values from image
+				 		    float r = p.red   (GB.altPicture.pixels[loc]);
+				 		    float g = p.green (GB.altPicture.pixels[loc]);
+				 		    float b = p.blue  (GB.altPicture.pixels[loc]);
+				 		    r = r + (CF.BtintR*CF.Balph/255);
+				 		    g = g + (CF.BtintG*CF.Balph/255);
+				 		    b = b + (CF.BtintB*CF.Balph/255);
+				 		    // Constrain RGB to between 0-255
+				 		    r = p.constrain(r,0,255);
+				 		    g = p.constrain(g,0,255);
+				 		    b = p.constrain(b,0,255);
+				 		    // Make a new color and set pixel in the window
+				 		    int  c = p.color(r,g,b);
+				 		    GB.altPicture.pixels[loc] = c;
+				 		  }
+				 		}
+				 	GB.altPicture.updatePixels();
 				 break;
 			 case 2: //work
+				 GB.workCanvas.beginDraw();
 					GB.workCanvas.fill(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 		  		  	GB.workCanvas.rect( 0, 0, GB.picWidth, GB.picHeight);  
+		  		  GB.workCanvas.endDraw();
 				 break;
 			 case 3: //control
+				  GB.controlCanvas.beginDraw();
 					GB.controlCanvas.fill(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 		  		  	GB.controlCanvas.rect( 0, 0, GB.picWidth, GB.picHeight); 
+		  		  GB.controlCanvas.endDraw();
 				 break;
 			 case 4: //output
-					GB.outputCanvas.fill(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
-		  		  	GB.outputCanvas.rect( 0, 0, GB.picWidth, GB.picHeight);  //or a color
+				    GB.outputCanvas.beginDraw();
+			    		GB.outputCanvas.fill(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
+		  		  		GB.outputCanvas.rect( 0, 0, GB.picWidth, GB.picHeight);  //or a color
+		  		    GB.outputCanvas.endDraw();
 				 break;
 			}
 			GB.workCanvas.noFill();

@@ -18,8 +18,8 @@ public class lineBrush extends Brush{
 		    super(p, startStrokePos, startVel, tarketAge);
 		    spx = (int) startStrokePos.x;
 		    spy = (int) startStrokePos.y;
-		    brushW = 8;
-		    brushH = 8;
+		    brushW = 16;
+		    brushH = 16;
 		    thisLineisaZombie = false;
 		}
 
@@ -33,6 +33,9 @@ public class lineBrush extends Brush{
 		}
 
 		public void processBrush(PApplet p, PVector pos, PVector strokeVelocity, int _strokeAge, int triNum) {
+			if(printPB == true) {
+				p.println("process  LINE brush");
+			}
 			strokeVel = strokeVelocity;
 //			int px = (int) pos.x;
 			int px = spx;
@@ -151,6 +154,7 @@ public class lineBrush extends Brush{
 			GB.outputCanvas.strokeWeight(CF.strokeWeight);
 			GB.outputCanvas.strokeCap(p.ROUND);
 			GB.outputCanvas.strokeJoin(p.MITER);
+//			GB.outputCanvas.beginDraw();
 			
 			int alpha = (CF.alphaVal + sourceAlpha) /2;
 			GB.outputCanvas.stroke(color,alpha);
@@ -229,7 +233,7 @@ public class lineBrush extends Brush{
 				break;
 			}
 
-		
+//		GB.outputCanvas.endDraw();
 		}
 
 		

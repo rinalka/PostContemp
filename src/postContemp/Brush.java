@@ -1,7 +1,13 @@
+
+
+
+
 package postContemp;
 
 import java.awt.Color;
 import java.awt.Component;
+
+import com.sun.javafx.geom.Shape;
 
 import processing.core.PApplet;
 import processing.core.PGraphics;
@@ -13,7 +19,7 @@ public class Brush {
 	PImage thisRawBrush;		//the original brush loaded in setup GB - unaltered selected in CF
 	PGraphics currentBrush;    // the current state of the brush - depending on.....
 	PImage tempBrush;
-	PImage tempBrush2;
+//	PGraphics tempBrush2;
 
 	PVector startLoc;
 	PVector strokeVel;
@@ -40,30 +46,45 @@ public class Brush {
 	float hueshift,satshift,brishift;
 	float hueRanFactor,satRanFactor,briRanFactor;
 	
+    boolean printPB = false;
+    
 	//constructor for bristle brushes
 	Brush (PApplet p, PImage _rawBrush, PVector _startLoc, int _tarketAge) {
 		startLoc = _startLoc;
 		tarketAge = _tarketAge;
 		strokesOldPos = startLoc;
 		
+		
 		thisRawBrush = _rawBrush;
 	 	brushW = thisRawBrush.width;
 	 	brushH = thisRawBrush.height;
+	 	GB.bW = brushW;
+	 	GB.bH = brushH;
 
 		currentBrush = p.createGraphics(brushW, brushH);
 		currentBrush.beginDraw();
-			currentBrush.fill(125);
+//	xxx		currentBrush.fill(125);//why 125 should probably be 0  
 			currentBrush.rect(0,0,brushW,brushH);
 		currentBrush.endDraw();
 
-		moveBrush(p,startLoc);	//move brush for the first time
-	 	loadBrush(p);
+		//we need to rotate the thisRawBrush to the correct angle before proceding
+//		rotateRawBrush(p,thisRawBrush);
+		moveBrush(p,startLoc);	//move brush for the first time to get the rotation correct
+		loadBrush(p);
+//		moveBrush(p,startLoc); // move it again
+		
+		if (tempBrush.pixels.length != currentBrush.pixels.length)
+			p.println("Warning Brush sizes not equal!");
+		
 	 	setHsbRanFactor(p);
 	 	masterHsbBrush(p);
-	 	blendBrush(p);
 	  	shapeBrush(p);
+//	  	rotateBrush();	
 	}
 
+
+
+	
 	//constructor for line and blob brushes
 	public Brush(PApplet p, PVector _startLoc, PVector _startVel, int _tarketAge) {
 		startLoc = _startLoc;
@@ -72,46 +93,57 @@ public class Brush {
 		strokesOldPos = startLoc;
 
 		if(CF.brushType == 1) {// a line brush
-			brushW = 4;
-			brushH = 4;
+			brushW = 2;
+			brushH = 2;
+//			p.println("just made a line brush size 4 * 4 ");
 		}else {//a blob brush
 			brushW = CF.blobSize;		
 			brushH = CF.blobSize;
 		}
-//		thisRawBrush = p.createImage(brushW, brushH, p.RGB);
+		
+		thisRawBrush = p.createImage(brushW, brushH, p.RGB);
 		GB.bW = brushW;
 		GB.bH = brushH;
-
+//		p.println("just made thisRawBrush size: " + brushW+ " " + brushH);
+		
 		currentBrush = p.createGraphics(brushW, brushH);
 		currentBrush.beginDraw();
-			currentBrush.fill(125,0);
+			currentBrush.fill(125,0); //was fill(125,0)??? don't know why
 			currentBrush.rect(0,0,brushW,brushH);
 		currentBrush.endDraw();
 		
 		moveBrush(p,startLoc);	//move brush for the first time
 	 	loadBrush(p);
+//	 	moveBrush(p,startLoc);//move it again
 	 	setHsbRanFactor(p);
 	 	masterHsbBrush(p);
-	 	blendBrush(p);
 	}
 
+	
+	
+	
+	//this processBrush is for Bristle brushes only - look in lineBrush or blobBrush for their versions
 	void processBrush(PApplet p, PVector pos, PVector strokeVelocity, int _strokeAge, int triNum) {
+		if(printPB == true) {
+			p.println("process  COPY brush");
+		}
 		strokeAge = _strokeAge;
-		strokeVel = strokeVelocity; //some brush types (like lineBrush) need to know the strokes current Velocity
-		rotateBrush();  	// set the the brushAngle that is to be used in drawBrush
+
+//		float strokeAngle = GB.strokeAngle;
+		rotateBrush(strokeVelocity); //revised strokeAngle 	// set the the brushAngle that is to be used in drawBrush
 		sizeBrush(p);		// set the scale(w and h) that is to be used in drawBrush
 		tintBrush();		// set the tint parameters that are used in drawBrush
 		moveBrush (p,pos);  // move the brush to it's new position (based on the stroke position 'pos'
 		loadBrush(p);       // load the brush from the fmap
-		blendBrush(p);		// like it says
 		masterHsbBrush(p);		// adjust the Brush with hsb values
 		shapeBrush(p);		// map to the rawBrush shape and Alpha
 		drawBrush (p);		// draw the brush into myCanvas
 		strokesOldPos = pos; // save the current stroke position in old position 
 	}
 	
-	void rotateBrush() {
-		brushAngle = (float) (brushAngle+CF.brushRotation);
+	void rotateBrush(PVector strokeVelocity) {//revised float strokeAngle
+			brushAngle = (float) (Math.atan2(strokeVelocity.y, strokeVelocity.x) - 3.14);
+//			brushAngle = (float) (brushAngle+CF.brushRotation);//need to rework in this cumulitive effect from CF
 	}
 	
 	void sizeBrush(PApplet p) { 
@@ -247,25 +279,72 @@ public class Brush {
 			tempBrush = GB.controlCanvas.get(locX,locY,brushW,brushH);
 			break;
 		}
-	}
 
-
-	void blendBrush(PApplet p) {
-		//all gone bye bye - because now there is a blendBrush class 
-	}
-
+	} 
+/*
+//  this version of shapeBrush is now used onl by blobBrush!!
 	void shapeBrush(PApplet p) {
 		currentBrush.loadPixels();
 		for(int h=0; h < brushH; h++) { // for every pixel in the brush
 			for( int w=0; w < brushW; w++) {
 				int index = (h * brushW)+w;
-				int mask = thisRawBrush.pixels[index] <<24;  //shift over and use blue as alpha?
+				int mask = thisRawBrush.pixels[index] <<24;  //shift over to get alpha (using blue for alpha!)
 				int val = tempBrush.pixels[index] & 0x00ffffff;   // tempBrush has a chunk of graphic be sure no alpha
 				currentBrush.pixels[index] = val | mask; // currentBrush gets the tempBrush color with the rawBrush alph
 			}
 		}
 		currentBrush.updatePixels();
 	}
+
+	
+//xxxx what is going on here???????????????????????????? why not use alpha
+	*/
+	void shapeBrush(PApplet p) {
+		currentBrush.loadPixels();
+		for(int h=0; h< brushH; h++) { // for every pixel in the brush
+			for( int w=0; w< brushW; w++) {
+				int index = (h*brushW)+w;
+				
+				//get the info out of the current brush Shape.class...
+				int brushpix = thisRawBrush.pixels[index];   // tempBrush has a chunk of graphic be sure no alpha
+				int mask = (brushpix <<24); //why am i using blue again??????? or is it sat????
+				int red = (brushpix >> 16) & 0xFF;  //shift and and to get the HSB values isolated
+				int gre = (brushpix >> 8) & 0xFF;
+				int blu = brushpix  & 0xFF;
+
+				
+				//get the pixel out of the the current chunk of canvas
+				int pixelstart = tempBrush.pixels[index] & 0x00ffffff; // get the colors currently in the brush
+				int alpha1 = (pixelstart>>24) & 0xFF;
+				int red1 = (pixelstart >> 16) & 0xFF;  //shift and and to get the HSB values isolated
+				int gre1 = (pixelstart >> 8) & 0xFF;
+				int blu1 = pixelstart  & 0xFF;
+
+				//now use the red and green from the brush to alter the chunk from the canvas			
+				int brifix = red;
+				//the divide by 2 below needs to be controlled by a slider or something
+				red1 = (red1+brifix)/2; 
+				gre1 = (gre1+brifix)/2;
+				blu1 = (blu1+brifix)/2; 
+				if (red1 > 255) {red1 = 255;} if (red1 < 0) {red1 = 0;}
+				if (gre1 > 255) {gre1 = 255;} if (gre1 < 0) {gre1 = 0;}
+				if (blu1 > 255) {blu1 = 255;} if (blu1 < 0) {blu1 = 0;}
+				
+				
+				//put it all back together
+				alpha1 = alpha1 <<24;
+				red1 = red1 << 16;
+				gre1 = gre1 << 8;
+				int pixelend = alpha1| red1 | gre1 | blu1 ;
+				
+				currentBrush.pixels[index] = pixelend | mask;
+			}
+		}
+		currentBrush.updatePixels();
+
+	}
+	
+
 	
 	void setHsbRanFactor (PApplet p) {// called only when the brush is constructed - so only for the stroke...
 		hueRanFactor = p.random(CF.HueRanLow,CF.HueRanHig) ;
@@ -280,14 +359,16 @@ public class Brush {
 		satshift = (float) (CF.satShift *.01); // convert satShift to a percent    
 		brishift = (float) (CF.briShift * .01); 
 
-//		p.println(tempBrush.pixels.length+" "+(brushW*brushH));
+//		p.println("in masterHsbBrush of Brush.java "+tempBrush.pixels.length+" "+(brushW*brushH));
 		for(int h=0; h< brushH; h++) { // for every pixel in the brush adjust hue sat and bri
 			for( int w=0; w< brushW; w++) {
 				int index = (h*brushW)+w;
 				if(index > tempBrush.pixels.length -1) {
-//					p.println("index in masterHsbBrush out of range...."); 
-					index = 1;
+					p.println("index in masterHsbBrush out of range.... a hack follows to correct"); 
+					p.println("index " + index +" "+ tempBrush.pixels.length+" "+(brushW*brushH)); 
+					index = 3;
 				}
+//				p.println("index " + index +" "+ tempBrush.pixels.length+" "+(brushW*brushH)); 
 				int color = tempBrush.pixels[index]; //get color of the  pixel
 				int r = (color >> 16) & 0xFF;  //shift and and to get the rgb of the tempBrush pixel
 				int g = (color >> 8) & 0xFF;
@@ -332,12 +413,44 @@ public class Brush {
 		GB.outputCanvas.imageMode(p.CORNER);//so all the other places that draw to myCanvas aren't all off....
 	}
 
+	
 	public Boolean amIaZombie(int age) {
 		return null;
 	}
 
+
+	private void rotateRawBrush(PApplet p, PImage thisRawBrush) {
+		// create a temporary brush
+		PGraphics tempBrush2 = p.createGraphics(brushW, brushH);
+		
+		
+		//now rotate tempBrush2 and copy thisRawBrush into it.
+		p.imageMode(p.CENTER);
+		GB.workCanvas.pushMatrix();	
+			GB.workCanvas.beginDraw();
+			GB.workCanvas.translate(GB.picWidth/2, GB.picHeight/2);
+			GB.workCanvas.rotate (brushAngle);
+			GB.workCanvas.image(thisRawBrush,0,0,brushW,brushH);//
+			GB.workCanvas.endDraw();
+		GB.workCanvas.popMatrix();
+		p.imageMode(p.CORNER);//so all the other places that draw to myCanvas aren't all off....
 	
+		//now copy the rotated tempBrush2 back into the thisRawBrush
+		thisRawBrush.loadPixels();
+		for(int h=0; h < brushH; h++) { // for every pixel in the brush
+			for( int w=0; w < brushW; w++) {
+				int index = (h * brushW)+w;
+				int cindex = (h * GB.picWidth)+w;
+				thisRawBrush.pixels[index] = GB.workCanvas.pixels[cindex];
+			}
+		}
+		thisRawBrush.updatePixels();
+	}
+
 }//end of the basic Brush class
+
+
+
 
 
 //dippedBrush   ***************can be removed - is just smudge brush at one extreme - but it does run faster
@@ -351,8 +464,11 @@ class dippedBrush extends Brush {
 	}
 	//just don't load the brush after the first call to loadBrush in the constructor!!!!!!!!!!!!!
 	void processBrush(PApplet p, PVector pos,PVector vel,int _strokeAge, int triNum) {
+		if(printPB == true) {
+			p.println("process  DIPPED brush");
+		}
 		strokeAge = _strokeAge;
-		rotateBrush();  	// set the the brushAngle that is to be used in drawBrush
+		rotateBrush(vel);  	// set the the brushAngle that is to be used in drawBrush
 		sizeBrush(p);		// set the scale(w and h) that is to be used in drawBrush
 		tintBrush();		// set the tint paramaters that are used in drawBrush
 		moveBrush (p,pos);  // move the brush to it's new position (based on the stroke position 'pos'
@@ -368,17 +484,20 @@ class dippedBrush extends Brush {
 
 //paintBrush
 //**********
-//paints a color onto the canvas - color current takeng from the pixel at the center of the start location of the brush
+//paints a color onto the canvas - color current taken from the pixel at the center of the start location of the brush
 class paintBrush extends Brush {
 
 	paintBrush (PApplet p, PImage _rawBrush, PVector startLoc, int tarketAge) {
 	    super(p, _rawBrush, startLoc, tarketAge);
-//	    masterHsbBrush(p);		// adjust the Brush with hsb values
 	}
+	
 	//don't load the brush after the first call to loadBrush in the constructor!!!!!!!!!!!!!
-	void processBrush(PApplet p, PVector pos, PVector vel, int _strokeAge, int triNum) {
+	void processBrush(PApplet p, PVector pos, PVector vel, int _strokeAge, int triNu) {
+		if(printPB == true) {
+			p.println("process  PAINT brush");
+		}
 		strokeAge = _strokeAge;
-		rotateBrush();  	// set the the brushAngle that is to be used in drawBrush
+		rotateBrush(vel);  	// set the the brushAngle that is to be used in drawBrush
 		sizeBrush(p);		// set the scale(w and h) that is to be used in drawBrush
 		tintBrush();		// set the tint paramaters that are used in drawBrush
 		moveBrush (p,pos);  // move the brush to it's new position (based on the stroke position 'pos'
@@ -389,6 +508,8 @@ class paintBrush extends Brush {
 		shapeBrush(p);		// do what needs to be done to the current brush color including mapping to the rawBrush shape
 		drawBrush (p);		// draw the brush into myCanvas
 	}
+	
+	//load normal brush but then fill it with only the color from the center adjusted from CF sliders - ******* this is slow - fix it
 	void loadBrush(PApplet p) {
 		switch (CF.loadBrushFrom) {
 		case 0:
@@ -404,13 +525,17 @@ class paintBrush extends Brush {
 			tempBrush = GB.controlCanvas.get(locX,locY,brushW,brushH);
 			break;
 		}
+		
+		if (tempBrush.pixels.length != currentBrush.pixels.length)
+			p.println("Warning:  brush size missmatch - they are not equal and should be!");
+
 		int color = tempBrush.pixels[(brushH/2*brushW)+brushW/2]; //get color of the center pixel
 		int r = (color >> 16) & 0xFF;  //shift and and to get the rgb of the tempBrush pixel
 		int g = (color >> 8) & 0xFF;
 		int b = color  & 0xFF;
 		float[] hsb = Color.RGBtoHSB(r,g,b,null);
 		float range = CF.HbristleVar/10000;
-		
+
 		if (CF.HbristleVar != 0) {
 			for(int h=0; h< brushH; h++) { // for every pixel in the brush set to that color
 				for( int w=0; w< brushW; w++) {
@@ -453,13 +578,16 @@ class smudgeBrush extends Brush {
 	  }
 	  
 		void shapeBrush(PApplet p) {
+			if(printPB == true) {
+				p.println("shaping a SMUDGE brush");
+			}
 			perx = perx + diff;
 			pery = pery - diff;
 
 			for(int h=0; h< brushH; h++) { // for every pixel in the brush
 				for( int w=0; w< brushW; w++) {
 					int index = (h*brushW)+w;
-					int mask = thisRawBrush.pixels[index] <<24; // use the blue value of rawBrush pixel as the alpha channel
+					int mask = thisRawBrush.pixels[index] <<24; // use the alpha channel
 					//*************can't figure how to mix in HSB so switch val to RGB
 					int HSBval1 = tempBrush.pixels[index];   // tempBrush has a chunk of graphic be sure no alpha
 					int hue1 = (HSBval1 >> 16) & 0xFF;  //shift and and to get the HSB values isolated
@@ -491,6 +619,24 @@ class colorBlendBrush extends Brush {
 
 	colorBlendBrush (PApplet p, PImage _rawBrush, PVector startLoc, int tarketAge) {
 	    super(p, _rawBrush, startLoc, tarketAge);
+	}
+	
+	void processBrush(PApplet p, PVector pos, PVector vel, int _strokeAge, int triNum) {
+		if(printPB == true) {
+			p.println("process  colorBlend brush");
+		}
+		strokeAge = _strokeAge;
+//		float strokeAngle = GB.strokeAngle;
+		rotateBrush(vel); //revised strokeAngle 	// set the the brushAngle that is to be used in drawBrush
+		sizeBrush(p);		// set the scale(w and h) that is to be used in drawBrush
+		tintBrush();		// set the tint parameters that are used in drawBrush
+		moveBrush (p,pos);  // move the brush to it's new position (based on the stroke position 'pos'
+		loadBrush(p);       // load the brush from the fmap
+		blendBrush(p);
+		masterHsbBrush(p);		// adjust the Brush with hsb values
+		shapeBrush(p);		// map to the rawBrush shape and Alpha
+		drawBrush (p);		// draw the brush into myCanvas
+		strokesOldPos = pos; // save the current stroke position in old position 
 	}
 	
 	void blendBrush(PApplet p) {

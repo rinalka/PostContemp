@@ -3,6 +3,7 @@ package postContemp;
 import java.awt.Color;
 
 import processing.core.PApplet;
+import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
@@ -34,6 +35,9 @@ class blobBrush extends Brush {
 
 
 	public void processBrush(PApplet p, PVector pos,PVector strokeVelocity, int _strokeAge, int triNum) {
+		if(printPB == true) {
+			PApplet.println("process  BLOB brush");
+		}
 		strokeAge = _strokeAge;
 //		thisBlobsTriNum = triNum;
 		
@@ -55,7 +59,7 @@ class blobBrush extends Brush {
 	}
 
 	
-	
+/*  this is now the same as loadBrush in the parent class Brush	
 	void loadBrush(PApplet p) {
     	int x = locX;
     	int y = locY;
@@ -74,11 +78,14 @@ class blobBrush extends Brush {
 			break;
 		}
     }
-
-
+*/
+	void rotateBrush() {//revised float strokeAngle
+//		brushAngle = strokeAngle;
+		brushAngle = (float) (brushAngle+CF.brushRotation);
+	}
 
 	
-	void shapeBrush (PApplet p) {   // how is this different from the shapeBrush in Brush???**************
+	void shapeBrush (PApplet p) {   
 		currentBrush.loadPixels();
 			for(int h=0; h < brushH; h++) { // for every pixel in the brush
 				for( int w=0; w < brushW; w++) {
@@ -123,11 +130,11 @@ class blobBrush extends Brush {
 			PVector here = new PVector(locX,locY);
 			int triNumber = MeshMap.findTriNum(p, here);
 			if (triNumber == -1) {
-				p.println("got a bad tri number " +triNumber +" at location "+locX+" "+locY);
+				PApplet.println("got a bad tri number " +triNumber +" at location "+locX+" "+locY);
 				triNumber = 1;
 			}
 			int triArea = (int) MeshMap.triAreas[triNumber];
-			int size = (int) p.sqrt((triArea/p.PI)*2);
+			int size = (int) PApplet.sqrt((triArea/PConstants.PI)*2);
 			sizeX = (int) (size * (CF.blobSize * .01));
 
 			if (sizeX > CF.blobSize) { sizeX = CF.blobSize;}
@@ -158,19 +165,19 @@ class blobBrush extends Brush {
 				hue = hue + CF.hueCenter;
 				if (hue > 1) hue = hue -1;
 				if (hue < 0) hue = hue +1;
-				float hueFactor = p.map(hue, 0, 1, minFactor, maxFactor);
+				float hueFactor = PApplet.map(hue, 0, 1, minFactor, maxFactor);
 				sizeX = sizeX + (sizeX * hueFactor);
 				sizeY = sizeY + (sizeY * hueFactor);
 				break;
 			case 1: //saturation
 				if (CF.sizeByHSBInvert == true) sat = 1-sat;
-				float satFactor = p.map(sat, 0, 1, minFactor, maxFactor);
+				float satFactor = PApplet.map(sat, 0, 1, minFactor, maxFactor);
 				sizeX = sizeX + (sizeX * satFactor);
 				sizeY = sizeY + (sizeY * satFactor);
 				break;
 			case 2: //brightnessif 
 				if (CF.sizeByHSBInvert == true) bri = 1-bri;
-				float briFactor = p.map(bri, 0, 1, minFactor, maxFactor);
+				float briFactor = PApplet.map(bri, 0, 1, minFactor, maxFactor);
 				sizeX = sizeX * briFactor;
 				sizeY = sizeY * briFactor;
 				break;
@@ -256,7 +263,7 @@ class blobBrush extends Brush {
 				elBrush.rect(0,0,brushW, brushH);
 				
 					float[] tid = new float[12];
-					float angle = p.PI / 4;
+					float angle = PConstants.PI / 4;
 					int numVertices = 8;
 					int part = 3;
 
@@ -271,17 +278,17 @@ class blobBrush extends Brush {
 					  elBrush.beginShape();
 					  for(int i = 0; i < numVertices; i++) 
 					  {
-					    float xpos = brushW/part + brushW/part * p.cos((angle * i)) + p.noise(tid[i]) * brushW/part;
-					    float ypos = brushH/part + brushW/part * p.sin((angle * i)) + p.noise(tid[(i + numVertices - 1) % numVertices]) * brushW/part;
+					    float xpos = brushW/part + brushW/part * PApplet.cos((angle * i)) + p.noise(tid[i]) * brushW/part;
+					    float ypos = brushH/part + brushW/part * PApplet.sin((angle * i)) + p.noise(tid[(i + numVertices - 1) % numVertices]) * brushW/part;
 					    elBrush.curveVertex(xpos, ypos);
 					  }
 					  for(int i = 0; i < 3; i++) 
 					  {
-					    float xpos = brushW/part + brushW/part * p.cos((angle * i)) + p.noise(tid[i]) * brushW/part;
-					    float ypos = brushW/part + brushW/part * p.sin((angle * i)) + p.noise(tid[(i + numVertices - 1) % numVertices]) * brushW/part;
+					    float xpos = brushW/part + brushW/part * PApplet.cos((angle * i)) + p.noise(tid[i]) * brushW/part;
+					    float ypos = brushW/part + brushW/part * PApplet.sin((angle * i)) + p.noise(tid[(i + numVertices - 1) % numVertices]) * brushW/part;
 					    elBrush.curveVertex(xpos, ypos);
 					  }  
-					  elBrush.endShape(p.CLOSE);
+					  elBrush.endShape(PConstants.CLOSE);
 					  for(int i = 0; i < numVertices; i++) 
 					  {
 					    tid[i] += p.random(0, (float) 0.01);
@@ -323,16 +330,16 @@ class blobBrush extends Brush {
 			  float controlAngle1 = (float) (angle/3.0);
 			  float controlAngle2 = (float) (controlAngle1*2.0);
 			  for ( int i=0; i<points; i++){
-			    px[i] = brushW/2+p.cos(p.radians(angle))*radius;
-			    py[i] = brushH/2+p.sin(p.radians(angle))*radius;
-			    cx[i] = brushW/2+p.cos(p.radians(angle+controlAngle1))* 
-			      controlRadius/p.cos(p.radians(controlAngle1));
-			    cy[i] = brushH/2+p.sin(p.radians(angle+controlAngle1))* 
-			      controlRadius/p.cos(p.radians(controlAngle1));
-			    cx2[i] = brushW/2+p.cos(p.radians(angle+controlAngle2))* 
-			      controlRadius/p.cos(p.radians(controlAngle1));
-			    cy2[i] = brushH/2+p.sin(p.radians(angle+controlAngle2))* 
-			      controlRadius/p.cos(p.radians(controlAngle1));
+			    px[i] = brushW/2+PApplet.cos(PApplet.radians(angle))*radius;
+			    py[i] = brushH/2+PApplet.sin(PApplet.radians(angle))*radius;
+			    cx[i] = brushW/2+PApplet.cos(PApplet.radians(angle+controlAngle1))* 
+			      controlRadius/PApplet.cos(PApplet.radians(controlAngle1));
+			    cy[i] = brushH/2+PApplet.sin(PApplet.radians(angle+controlAngle1))* 
+			      controlRadius/PApplet.cos(PApplet.radians(controlAngle1));
+			    cx2[i] = brushW/2+PApplet.cos(PApplet.radians(angle+controlAngle2))* 
+			      controlRadius/PApplet.cos(PApplet.radians(controlAngle1));
+			    cy2[i] = brushH/2+PApplet.sin(PApplet.radians(angle+controlAngle2))* 
+			      controlRadius/PApplet.cos(PApplet.radians(controlAngle1));
 			    // Increment angle so trig functions keep chugging along
 			    angle+=360.0/points;
 			  }
@@ -450,13 +457,13 @@ class paintBlobBrush extends blobBrush {
 				satshift = satshift + suedelta;
 				if (satshift > srangemax || satshift < srangemin) suedelta = suedelta*-1;
 				float sat = hsb[1]+ satshift;
-				sat = p.constrain(sat,0,1);
+				sat = PApplet.constrain(sat,0,1);
 				
 				buedelta = buedelta + (p.random((float)-.0000005,(float).0000005));
 				brishift = brishift + buedelta;
 				if (brishift > brangemax || brishift < brangemin) buedelta = buedelta*-1;	
 				float bri = hsb[2]+brishift;
-				bri = p.constrain(bri,0,1);
+				bri = PApplet.constrain(bri,0,1);
 				
 				color = Color.HSBtoRGB(hue, sat, bri);
 				tempBrush.pixels[h] = color; //color;
@@ -480,46 +487,46 @@ class blendBlobBrush extends blobBrush {
 		for (int i=0; i<tempBrush.pixels.length; i++ ) {
 			switch(CF.colorBlendType) {
 				case 0:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.BLEND);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.BLEND);
 					break;
 				case 1:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.ADD);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.ADD);
 					break;
 				case 2:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.SUBTRACT);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.SUBTRACT);
 					break;
 				case 3:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.DARKEST);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.DARKEST);
 					break;
 				case 4:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.LIGHTEST);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.LIGHTEST);
 					break;
 				case 5:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.DIFFERENCE);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.DIFFERENCE);
 					break;
 				case 6:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.EXCLUSION);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.EXCLUSION);
 					break;
 				case 7:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.MULTIPLY);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.MULTIPLY);
 					break;
 				case 8:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.SCREEN);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.SCREEN);
 					break;
 				case 9:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.OVERLAY);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.OVERLAY);
 					break;
 				case 10:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.HARD_LIGHT);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.HARD_LIGHT);
 					break;
 				case 11:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.SOFT_LIGHT);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.SOFT_LIGHT);
 					break;
 				case 12:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.DODGE);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.DODGE);
 					break;
 				case 13:
-					tempBrush.pixels[i] = p.blendColor(tempBrush.pixels[i],color, p.BURN);
+					tempBrush.pixels[i] = PApplet.blendColor(tempBrush.pixels[i],color, PConstants.BURN);
 					break;
 				}
 			}
@@ -534,9 +541,9 @@ class randomBlobBrush extends blobBrush {
 		
 	    super(p, startStrokePos, startVel, tarketAge);//strokesTriNum);
 
-		if ( strokesTriNum > MeshMap.triAreas.length-1) p.println("index "+strokesTriNum+" is going to crash in randomBlobBrush "+ MeshMap.triAreas.length);
+		if ( strokesTriNum > MeshMap.triAreas.length-1) PApplet.println("index "+strokesTriNum+" is going to crash in randomBlobBrush "+ MeshMap.triAreas.length);
 		
-		int size = (int) p.sqrt((MeshMap.triAreas[strokesTriNum]/p.PI)*2);
+		int size = (int) PApplet.sqrt((MeshMap.triAreas[strokesTriNum]/PConstants.PI)*2);
 	    brushW = ( size + CF.blobSize)/2;
 	    brushH = brushW;
 	    
@@ -561,6 +568,9 @@ class randomBlobBrush extends blobBrush {
 	}
 	
 	public void processBrush(PApplet p, PVector pos,PVector strokeVelocity, int _strokeAge, int triNum) {
+		if(printPB == true) {
+			PApplet.println("process  random BLOB brush");
+		}
 		strokeAge = _strokeAge;
 
 		rotateBrush();
@@ -573,7 +583,7 @@ class randomBlobBrush extends blobBrush {
 	}
 	
 	void drawBrush (PApplet p){
-		GB.outputCanvas.imageMode(p.CENTER);
+		GB.outputCanvas.imageMode(PConstants.CENTER);
 		GB.outputCanvas.pushMatrix();
 			GB.outputCanvas.translate(locX+(brushW/2),locY+(brushH/2));
 			GB.outputCanvas.rotate (brushAngle);
@@ -581,7 +591,7 @@ class randomBlobBrush extends blobBrush {
 			GB.outputCanvas.image(currentBrush,0,0,sizeX,sizeY);//
 			GB.outputCanvas.removeCache(currentBrush); //****** delete from memory manually or CRASH because of Java heap
 		GB.outputCanvas.popMatrix();
-		GB.outputCanvas.imageMode(p.CORNER);//so all the other places that draw to myCanvas aren't all off....
+		GB.outputCanvas.imageMode(PConstants.CORNER);//so all the other places that draw to myCanvas aren't all off....
 	}
 	
 	void loadBrush(PApplet p) {

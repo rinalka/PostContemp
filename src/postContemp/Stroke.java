@@ -10,6 +10,7 @@ import processing.core.PVector;
 public class Stroke {
 
 	Brush thisStrokesBrush;
+	int thisStrokesBrushType;
 	
 	PVector startStrokePos;
 	PVector currentStrokePos;
@@ -29,6 +30,7 @@ public class Stroke {
 	int thisStrokesVertNum;
 	int randomCount = 0;
 
+
 	
 	Stroke(PApplet p){
 		strokeAge = 0;
@@ -39,11 +41,12 @@ public class Stroke {
 		thisStrokesVertNum = 0;
 		strokeTooOld = false;
 	
+		thisStrokesBrushType = CF.brushType;
 		setStartPosition(p);   // there is a potential in set start position for an infinite loop caused by too tight color restrictions - this should be fixed some day
 		setTarketStrokeAge(p);
 		setVelocity(p);
 		setAcceleration(p);
-		
+		moveStroke();
 		setStrokesBrush(p, GB.rawBrush);
 	}
 
@@ -53,24 +56,29 @@ public class Stroke {
 		case 0://bristle brush
 			switch (CF.bristleBrushType) {
 			case 0:
+//				p.println("should be about to call the construcor for copyBrush");
 				thisStrokesBrush = new Brush(p,thisStrokesBrushFile,startStrokePos,tarketStrokeAge);
 				break;
 			case 1:
+				//p.println("should be about to call the construcor for dippedBrush");
 				thisStrokesBrush = new dippedBrush(p,thisStrokesBrushFile,startStrokePos,tarketStrokeAge);
 				break;
 			case 2:
+				//p.println("should be about to call the construcor for smudgeBrush");
 				thisStrokesBrush = new smudgeBrush(p,thisStrokesBrushFile,startStrokePos,tarketStrokeAge);
 				break;
 			case 3:
+				//p.println("should be about to call the construcor for paintBrush");
 				thisStrokesBrush = new paintBrush(p,thisStrokesBrushFile,startStrokePos,tarketStrokeAge);
 				break;
 			case 4:
+				//p.println("should be about to call the construcor for colorBlendBrush");
 				thisStrokesBrush = new colorBlendBrush(p,thisStrokesBrushFile,startStrokePos,tarketStrokeAge);
 				break;
 			}
 			break;
 		case 1://line brush
-			thisStrokesBrush = new lineBrush(p,startStrokePos,strokeVelocity,tarketStrokeAge);
+				thisStrokesBrush = new lineBrush(p,startStrokePos,strokeVelocity,tarketStrokeAge);
 			break;
 		case 2://blob brush
 			switch(CF.blobBrushType) {
@@ -93,6 +101,8 @@ public class Stroke {
 			}
 
 		}
+		
+		
 }//end setStrokesBrush
 	
 
@@ -109,7 +119,7 @@ public class Stroke {
 			GB.bW = CF.blobSize;
 			GB.bH = CF.blobSize;
 		}
-		//turns out it is the same sort of story for line brushes only they lines (except for drop and that should be safe) should on ly be as wide as ....
+		//turns out it is the same sort of story for line brushes only they lines (except for drop and that should be safe) should only be as wide as ....
 		if(CF.brushType == 1) {//then this is a line brush
 			GB.bW = CF.strokeWeight;
 			GB.bH = CF.strokeWeight;
@@ -137,7 +147,7 @@ public class Stroke {
 				break;
 				
 			case 1://ordered
-				int tx = (int) GB.holdStrokePos.x + CF.orderedGridResX ;
+/*				int tx = (int) GB.holdStrokePos.x + CF.orderedGridResX ;
 				int ty = (int) GB.holdStrokePos.y ;
 				if (tx > GB.picWidth-GB.bW) {
 					tx = GB.bW;
@@ -161,6 +171,9 @@ public class Stroke {
 				startStrokePos = new PVector(holdtx,holdty);
 				currentStrokePos = new PVector(holdtx,holdty);
 				isPosLegal();
+				*/
+				startStrokePos = new PVector(1500,1500);
+				currentStrokePos = new PVector(1500,1500);
 				break;
 				
 			case 2://triangle
@@ -359,7 +372,8 @@ public class Stroke {
 			case 9: // go to the mouse
 				strokeVelocity = PVector.random2D();
 				break;
-		}//end switch
+		}//end switchG
+		
 	}//end setVelocity
 
 //set acceleration
@@ -793,7 +807,9 @@ public class Stroke {
 		strokeAge++;
 		endStroke();
 		if(strokeIsDead == false) {
-			thisStrokesBrush.processBrush(p,currentStrokePos,strokeVelocity,strokeAge,thisStrokesTriNum); //process the brush at the current location of the stroke
+			//NEED a way to be sure I'm calling the correct processBrush - I've muckkeded this up
+			
+			thisStrokesBrush.processBrush( p,currentStrokePos,strokeVelocity,strokeAge,thisStrokesTriNum); //process the brush at the current location of the stroke
 		}
 		if(strokeIsaZombie == false) {
 			moveStroke(); //move the stroke to it's next location
@@ -809,6 +825,7 @@ public class Stroke {
 		strokeVelocity.add(tempAcc);
 		//a unit version of strokeVelocity is calculated
 		PVector strokeVelUV = new PVector(strokeVelocity.x,strokeVelocity.y);
+
 		strokeVelUV.normalize();
 		//that unit velocity is limited/or increased by CF.speedLimit 
 		PVector moveAmount = new PVector(strokeVelUV.x,strokeVelUV.y);

@@ -20,8 +20,11 @@ public class DisplayWindow {
 	
 	DisplayWindow () {
 
-		displayW = 1920; //(int) (GB.picWidth * GB.screensizeFactor);
-		displayH = 1280; //(int) (GB.picHeight * GB.screensizeFactor);
+		displayW = GB.displayWidth; //(int) (GB.picWidth * GB.screensizeFactor);
+		displayH = GB.displayHeight; //(int) (GB.picHeight * GB.screensizeFactor);
+//		displayW = (int) (GB.picWidth * GB.screensizeFactor);
+//		displayH = (int) (GB.picHeight * GB.screensizeFactor);
+
 		hold_displayW = displayW;
 		hold_displayH = displayH;
 		screen_locx = (GB.picWidth /2) - (displayW); //default the screen view window in the center of the picture
@@ -30,6 +33,7 @@ public class DisplayWindow {
 	
 	 void update(PApplet p) {
 	   // copy a chunk from myCanvas and display it on the screen
+
 		 switch (CF.whichCanvas) {
 		 case 0: //pic
 			 temp = GB.thePicture.get(screen_locx,screen_locy,displayW,displayH);
@@ -53,7 +57,7 @@ public class DisplayWindow {
 	
 	   if (CF.whichCanvas != 5) {// if it's any canvas but no canvas show it
 		   p.image(temp,0,0,hold_displayW,hold_displayH);
-		   p.removeCache(temp);
+		  // p.removeCache(temp);
 	   }
 	}
 	 
@@ -117,56 +121,56 @@ public class DisplayWindow {
 
 
 	 static void canvasCopy(PApplet p) {
-			CF2.runRB.activate(2);
+			CF2.runRB.activate(2);  //turn pause on
 			switch (CF.whichCopy) {
 			case 0://pic to work
 				GB.workCanvas.beginDraw();
 					GB.workCanvas.tint(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 					GB.workCanvas.image(GB.thePicture, 0, 0, GB.picWidth, GB.picHeight);
 				GB.workCanvas.endDraw();
-				p.removeCache(GB.thePicture);
+				//p.removeCache(GB.thePicture);
 				break;
 			case 1://pic to output
 				GB.outputCanvas.beginDraw();
 					GB.outputCanvas.tint(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 					GB.outputCanvas.image(GB.thePicture, 0, 0, GB.picWidth, GB.picHeight);  
 				GB.outputCanvas.endDraw();
-				p.removeCache(GB.thePicture);
+				//p.removeCache(GB.thePicture);
 				break;
 			case 2://pic to control
 				GB.controlCanvas.beginDraw();
 					GB.controlCanvas.tint(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 					GB.controlCanvas.image(GB.thePicture, 0, 0, GB.picWidth, GB.picHeight); 
 				GB.controlCanvas.endDraw();
-				p.removeCache(GB.thePicture);
+				//p.removeCache(GB.thePicture);
 				break;
 			case 3://alt to control
 				GB.controlCanvas.beginDraw();
 					GB.controlCanvas.tint(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 					GB.controlCanvas.image(GB.altPicture, 0, 0, GB.picWidth, GB.picHeight); 
 				GB.controlCanvas.endDraw();
-				p.removeCache(GB.altPicture);
+				//p.removeCache(GB.altPicture);
 				break;
 			case 4://work to control
 				GB.controlCanvas.beginDraw();
 					GB.controlCanvas.tint(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 					GB.controlCanvas.image(GB.workCanvas, 0, 0, GB.picWidth, GB.picHeight); 
 				GB.controlCanvas.endDraw();
-				p.removeCache(GB.workCanvas);
+				//p.removeCache(GB.workCanvas);
 				break;
 			case 5://work to output
 				GB.outputCanvas.beginDraw();
 					GB.outputCanvas.tint(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 					GB.outputCanvas.image(GB.workCanvas, 0, 0, GB.picWidth, GB.picHeight); 
 				GB.outputCanvas.endDraw();
-				p.removeCache(GB.workCanvas);
+				//p.removeCache(GB.workCanvas);
 				break;
 			case 6://alt to work 
 				GB.workCanvas.beginDraw();
 					GB.workCanvas.tint(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 					GB.workCanvas.image(GB.altPicture, 0, 0, GB.picWidth, GB.picHeight); 
 				GB.workCanvas.endDraw();
-				p.removeCache(GB.altPicture);
+				//p.removeCache(GB.altPicture);
 				break;
 			case 7:
 				GB.thePicture = p.loadImage(GB.thefile);
@@ -179,7 +183,7 @@ public class DisplayWindow {
 					GB.outputCanvas.tint(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 					GB.outputCanvas.image(GB.controlCanvas, 0, 0, GB.picWidth, GB.picHeight); 
 				GB.outputCanvas.endDraw();
-				p.removeCache(GB.controlCanvas);
+				//p.removeCache(GB.controlCanvas);
 				break;
 			case 10://work to alt 
 				GB.altPicture.loadPixels();
@@ -201,21 +205,21 @@ public class DisplayWindow {
 					GB.outputCanvas.tint(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 					GB.outputCanvas.image(GB.altPicture, 0, 0, GB.picWidth, GB.picHeight); 
 				GB.outputCanvas.endDraw();
-				p.removeCache(GB.altPicture);
+				//p.removeCache(GB.altPicture);
 				break;
 			case 13://control to work 
 				GB.workCanvas.beginDraw();
 					GB.workCanvas.tint(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 					GB.workCanvas.image(GB.controlCanvas, 0, 0, GB.picWidth, GB.picHeight); 
 				GB.workCanvas.endDraw();
-				p.removeCache(GB.controlCanvas);
+				//p.removeCache(GB.controlCanvas);
 				break;
 			case 14://output to work 
 				GB.outputCanvas.beginDraw();
 					GB.workCanvas.tint(CF.BtintR,CF.BtintG,CF.BtintB,CF.Balph);
 					GB.workCanvas.image(GB.outputCanvas, 0, 0, GB.picWidth, GB.picHeight); 
 				GB.outputCanvas.endDraw();
-				p.removeCache(GB.outputCanvas);
+				//p.removeCache(GB.outputCanvas);
 				break;
 			}
 		}//end canvas Copy

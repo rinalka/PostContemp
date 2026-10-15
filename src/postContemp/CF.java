@@ -5,6 +5,8 @@ import java.awt.Color;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PGraphics;
+import controlP5.*;
+/**
 import processing.core.PImage;
 import controlP5.CheckBox;
 import controlP5.ColorPicker;
@@ -21,10 +23,12 @@ import controlP5.Range;
 import controlP5.Slider;
 import controlP5.Textlabel;
 import controlP5.Toggle;
-
+*/
 
 public class CF extends PApplet {
+	
 	int w, h;
+
 	
 	
 	static float BrushSize = 1;
@@ -42,7 +46,7 @@ public class CF extends PApplet {
 	static int orderedGridResY = 32;
 	static int oGridRanX = 5;
 	static int oGridRanY = 5;
-	static float strokeAngleAdjust = 0;
+	public static float strokeAngleAdjust = 0;
 
 	static int strokeType = 0;
 	static int startPosType = 0;
@@ -69,7 +73,8 @@ public class CF extends PApplet {
 	static int colorBlendType = 0;
 	static float saturation = 0;
 	static boolean satChanged = false;
-	static float HbristleVar,SbristleVar,BbristleVar;
+	static float HbristleVar = (float).01;
+	static  float SbristleVar,BbristleVar;
 	static float strokeAgeVar = 1;
 	static int strokeVaryControl = 3;//off
 	static boolean HSBinvert = false;
@@ -151,8 +156,12 @@ public class CF extends PApplet {
 	static int perlinOctaves = 4;
 	static float perlinFade = .5f;
 	
+
+//	ControlFrame cp5;
+//	Object parent;
+	PApplet parent;
 	ControlP5 cp5;
-	Object parent;
+	
 	ColorPicker cp1,cp2;
 
 	Slider s1,s2,smudgePer,sat,gridResXS,gridResYS,saa,slv;
@@ -165,14 +174,14 @@ public class CF extends PApplet {
 	Slider perlinLengthS,perlinSpaceS,perlinNoiseXS,perlinNoiseYS,perlinNoiseZS,perlinCurlS,perlinOctS,perlinFadS;
 	
 
-	DropdownList brushShapeDD;
-	DropdownList startPosTypeDD;
-	DropdownList startPosResDD;
-	DropdownList velocityTypeDD;
-	DropdownList velocityKindDD;
-	DropdownList dd7;
-	DropdownList dd8;
-	DropdownList svc;
+	ScrollableList brushShapeDD;
+	ScrollableList startPosTypeDD;
+	ScrollableList startPosResDD;
+	ScrollableList velocityTypeDD;
+	ScrollableList velocityKindDD;
+	ScrollableList dd7;
+	ScrollableList dd8;
+	ScrollableList svc;
 	Textlabel l1,l2,l3,l4,l5,l6,l7,l8,cb,velocityKindL,lab,brushTypeL,brushShapeL,lineTypeL,blobTypeL,strokeTypeL,velocityTypeL;
 	Textlabel blobBrushTypeL,lineBrushTypeL,bristleBrushTypeL,blobShapeL;
 	FrameRate fr;
@@ -216,20 +225,31 @@ public class CF extends PApplet {
 
 
 
-	public CF(Object theParent, int theWidth, int theHeight) {
-		parent = theParent;
-		w = theWidth;
-		h = theHeight;
-	}
+	public CF(PApplet _parent, int _w, int _h, String _name) {
+	   		    super();   
+	   		    parent = _parent;
+	   		    w=_w;
+	   		    h=_h;
+	   		    PApplet.runSketch(new String[]{this.getClass().getName()}, this);
+	   		    
+	   }
 
-
+	public void settings() {
+		//size(w, h);
+		size(1240,1700);
+		smooth();
+		}
+	
 	public void setup() {
-		size(w, h);
-		frameRate(15);
+		surface.setLocation(3200-w,0);
 		cp5 = new ControlP5(this);
-		PFont medfont = createFont("Arial",30,true); // use true/false for smooth/no-smooth
-		PFont bigfont = createFont("Arial",50,true); 
-		ControlFont font = new ControlFont(medfont,18);
+		
+//		size(w, h);
+		frameRate(15);
+
+		PFont medfont = createFont("Arial",20,true); // use true/false for smooth/no-smooth
+		PFont bigfont = createFont("Arial",40,true); 
+		ControlFont font = new ControlFont(medfont,16);
 		cp5.setFont(font) ;
 		cp5.getFont() .sharp();
 
@@ -272,14 +292,19 @@ public class CF extends PApplet {
 		lab = cp5.addTextlabel("labelsv") .setText("Age ALT BY ")  .setPosition(col2,sBar+120) ;
 		StvCb = cp5.addCheckBox("InvertHSB") .setPosition(col2+140,sBar+120)  .setColorForeground(color(120))  .setColorActive(color(255))  .setColorLabel(color(255))
 				.setSize(20, 20)  .addItem("Inverted", 0);
-		svc = cp5.addDropdownList("strokeVaryControl") .setPosition(col2, sBar+165) .setBackgroundColor(color(190)) .setItemHeight(20) .setBarHeight(20) .setWidth(255) .setHeight(90);
-		svc.addItem("hue",0); 
-		svc.addItem("sat",1); 
-		svc.addItem("bri",2);	
-		svc.addItem("red",3);
-		svc.addItem("green",4);
-		svc.addItem("blue",5);
-		svc.addItem("OFF",6);	 
+
+		svc = cp5.addScrollableList("strokeVaryControl") 
+				.setPosition(col2, sBar+165) 
+				.setBackgroundColor(color(190)) .setItemHeight(20) .setBarHeight(20) .setWidth(255) .setHeight(90)
+				.setColorLabel(0xfffff000)
+				.setType(ScrollableList.LIST);
+				svc.addItem("hue",0); 
+				svc.addItem("sat",1); 
+				svc.addItem("bri",2);	
+				svc.addItem("red",3);
+				svc.addItem("green",4);
+				svc.addItem("blue",5);
+				svc.addItem("OFF",6);	 
 
 		curveAmtSL = cp5.addSlider("curveAmnt").plugTo(parent,"curveAmnt").setRange((float).01,(float)2)	.setValue(curveAmnt)	
 				.setPosition(col2,sBar+280).setSize(255,20);
@@ -291,11 +316,11 @@ public class CF extends PApplet {
 
 		
 		
-		gridResXS = cp5.addSlider("orderedGridResX") .plugTo(parent,"orderedGridResX") .setRange(1, 255) .setValue(orderedGridResX) 
+		gridResXS = cp5.addSlider("orderedGridResX") .plugTo(parent,"orderedGridResX") .setRange(1, 1000) .setValue(orderedGridResX) 
 				.setPosition(col2,sBar+395) 
 				.setSize(125,20) .setVisible(false);
 		cp5.getController("orderedGridResX").getCaptionLabel().align(ControlP5.LEFT, ControlP5.TOP_OUTSIDE).setPaddingX(0);
-		gridResYS = cp5.addSlider("orderedGridResY") .plugTo(parent,"orderedGridResY") .setRange(1, 255) .setValue(orderedGridResY) 
+		gridResYS = cp5.addSlider("orderedGridResY") .plugTo(parent,"orderedGridResY") .setRange(1, 1000) .setValue(orderedGridResY) 
 				.setPosition(col2+130,sBar+395) .setVisible(false)
 				.setSize(125,20) .setVisible(false);
 		cp5.getController("orderedGridResY").getCaptionLabel().setVisible(false);
@@ -363,41 +388,59 @@ public class CF extends PApplet {
 		cp5.getController("bri Range").getCaptionLabel() .align(ControlP5.LEFT, ControlP5.TOP_OUTSIDE).setPaddingX(0);
 
 
-		cp5.addTextlabel("label3") .setText("START POSITION TYPE")  .setPosition(col3,sBar+15) ;
-		startPosTypeDD = cp5.addDropdownList("Start Pos Type") .setPosition(col3, sBar+15+40) .setBackgroundColor(color(190)) .setItemHeight(20) .setBarHeight(20) .setWidth(255) .setHeight(180);
-		startPosTypeDD.addItem("Random",0); 
-		startPosTypeDD.addItem("Ordered",1); 
-		startPosTypeDD.addItem("from Triangle",2);
-		startPosTypeDD.addItem("fromMouse",3);
-		startPosTypeDD.addItem("from Vertice", 4);
-		startPosTypeDD.addItem("from List", 5);
-
-
-		//col4*******************
-		velocityTypeL = cp5.addTextlabel("label4") .setText("VELOCITY TYPE")  .setPosition(col4,sBar+15) ;
-		velocityTypeDD = cp5.addDropdownList("Velocity Type") .setPosition(col4, sBar+15+40) .setBackgroundColor(color(190)) 
-				.setItemHeight(20) .setBarHeight(20) .setWidth(255) .setHeight(180);
-			velocityTypeDD.addItem("Random",0); 
-			velocityTypeDD.addItem("Angle from Pic",1);
-			velocityTypeDD.addItem("Angle from Alt",2);
-			velocityTypeDD.addItem("Angle from Work",3);
-			velocityTypeDD.addItem("Angle from Control",4);
-			velocityTypeDD.addItem("Seeker from Pic",5);
-			velocityTypeDD.addItem("Seeker from Alt",6);
-			velocityTypeDD.addItem("Seeker from Work",7);
-			velocityTypeDD.addItem("Seeker from Control",8);
-			velocityTypeDD.addItem("to Mouse", 9);
-
-
-		velocityKindL = cp5.addTextlabel("label5") .setText("VELOCITY KIND")  .setPosition(col4,sBar+240) .setVisible(false);
-		velocityKindDD = cp5.addDropdownList("Velocity Kind") .setPosition(col4,sBar+290) .setVisible(false)
-				.setBackgroundColor(color(190)) .setItemHeight(20) .setBarHeight(20) .setWidth(255) .setHeight(180);
+//		cp5.addTextlabel("label3") .setText("START POSITION TYPE")  .setPosition(col3,sBar+15) ;
+		startPosTypeDD = cp5.addScrollableList("StartPosType") 
+				.setPosition(col3, sBar+15+30) 
+				.setBackgroundColor(color(190)) .setItemHeight(20) .setBarHeight(20) .setWidth(255) .setHeight(180)
+				.setColorLabel(0xfffff000)
+				.setType(ScrollableList.LIST);
+				startPosTypeDD.addItem("Random",0); 
+				startPosTypeDD.addItem("Ordered",1); 
+				startPosTypeDD.addItem("from Triangle",2);
+				startPosTypeDD.addItem("fromMouse",3);
+				startPosTypeDD.addItem("from Vertice", 4);
+				startPosTypeDD.addItem("from List", 5);
+		
+//				  Textlabel myTextlabelA = cp5.addTextlabel("label15")
+//		                    .setText("VELOCITY KIND")
+//		                    .setPosition(col4,sBar+240)
+//		                    .setColorValue(0xfffff000)
+//		                    .setFont(createFont("Georgia",20))
+//		                    ;
+//		cp5.addTextlabel("label5") .setText("VELOCITY KIND")  .setPosition(col4,sBar+240) .setVisible(true);
+		velocityKindDD = cp5.addScrollableList("VelocityKind") 
+				.setPosition(col4,sBar+280) 
+				.setVisible(true)
+				.setBackgroundColor(color(190)) .setItemHeight(20) .setBarHeight(20) .setWidth(255) .setHeight(180)
+				.setColorLabel(0xfffff000)
+				.setType(ScrollableList.LIST);
 				velocityKindDD.addItem("Red",0); 
 				velocityKindDD.addItem("Green",1); 
 				velocityKindDD.addItem("Blue",2); 
 				velocityKindDD.addItem("Hue",3); 
 				velocityKindDD.addItem("Saturation",4); 
 				velocityKindDD.addItem("Brightness",5);
+
+		//col4*******************
+//		cp5.addTextlabel("label4") .setText("VELOCITY TYPE")  .setPosition(col4,sBar+15) ;
+		velocityTypeDD = cp5.addScrollableList("VelocityType") 
+				.setPosition(col4, sBar+15+0) 
+				.setBackgroundColor(color(190)) .setItemHeight(20) .setBarHeight(20) .setWidth(255) .setHeight(180)
+				.setColorLabel(0xfffff000)
+				.setType(ScrollableList.LIST);
+				velocityTypeDD.addItem("Random",0); 
+				velocityTypeDD.addItem("Angle from Pic",1);
+				velocityTypeDD.addItem("Angle from Alt",2);
+				velocityTypeDD.addItem("Angle from Work",3);
+				velocityTypeDD.addItem("Angle from Control",4);
+				velocityTypeDD.addItem("Seeker from Pic",5);
+				velocityTypeDD.addItem("Seeker from Alt",6);
+				velocityTypeDD.addItem("Seeker from Work",7);
+				velocityTypeDD.addItem("Seeker from Control",8);
+				velocityTypeDD.addItem("to Mouse", 9);
+
+
+
 
 
 		saa =  cp5.addSlider("strokeAngleAdjust") .plugTo(parent,"strokeAngleAdjust") .setRange(0, TWO_PI) .setValue(strokeAngleAdjust) 
@@ -506,19 +549,37 @@ public class CF extends PApplet {
 
 		l8 =   cp5.addTextlabel("labelcbt") .setText(" ColorBLEND TYPE")  .setPosition(col2,bBar+180) ;
 		l8.setVisible(false);
-		dd8 =   cp5.addDropdownList("colorBlend Type") .setPosition(col2,bBar+200) .setBackgroundColor(color(190)) .setItemHeight(20) .setBarHeight(20) .setWidth(255) 
-				.setHeight(120);
-		dd8.addItem("Blend",0); dd8.addItem("Add",1); dd8.addItem("Subtract",2); dd8.addItem("Darkest",3); dd8.addItem("Lightest",4);
-		dd8.addItem("Difference",5); dd8.addItem("Exclusion",6); dd8.addItem("Multiply",7); dd8.addItem("Screen", 8); dd8.addItem("Overlay",9); dd8.addItem("Hard_light",10);
-		dd8.addItem("Soft_light",11); dd8.addItem("Dodge",12); dd8.addItem("Burn",13); 
+
+		dd8 =   cp5.addScrollableList("colorBlend Type") 
+				.setPosition(col2,bBar+200) 
+				.setBackgroundColor(color(190)) .setItemHeight(20) .setBarHeight(20) .setWidth(255) .setHeight(120)
+				.setColorLabel(0xfffff000)
+				.setType(ScrollableList.LIST);
+		dd8.addItem("Blend",0); 
+		dd8.addItem("Add",1); 
+		dd8.addItem("Subtract",2); 
+		dd8.addItem("Darkest",3); 
+		dd8.addItem("Lightest",4);
+		dd8.addItem("Difference",5); 
+		dd8.addItem("Exclusion",6); 
+		dd8.addItem("Multiply",7); 
+		dd8.addItem("Screen", 8); 
+		dd8.addItem("Overlay",9); 
+		dd8.addItem("Hard_light",10);
+		dd8.addItem("Soft_light",11);
+		dd8.addItem("Dodge",12); 
+		dd8.addItem("Burn",13); 
 		dd8.setVisible(false);
 
 
 
 
 		//col3**********************************************
-		brushShapeL =  cp5.addTextlabel("label1") .setText("BRUSH SHAPE")  .setPosition(col3,bBar+15) ;
-		brushShapeDD =   cp5.addDropdownList("Brush Shape") .setPosition(col3,bBar+15+40) .setBackgroundColor(color(190)) .setItemHeight(20) .setBarHeight(20) .setWidth(255) .setHeight(380);
+		//cp5.addTextlabel("label1") .setText("BRUSH SHAPE")  .setPosition(col3,bBar+15) ;
+		brushShapeDD =   cp5.addScrollableList("BrushShape") .setPosition(col3,bBar+15+40) 
+				.setBackgroundColor(color(190)) .setItemHeight(20) .setBarHeight(20) .setWidth(255) .setHeight(380)
+				.setColorLabel(0xfffff000)
+				.setType(ScrollableList.LIST);
 		brushShapeDD.addItem("whitedot32",0); 
 		brushShapeDD.addItem("blob32",1); 
 		brushShapeDD.addItem("blobcross32",2);
@@ -836,7 +897,7 @@ public class CF extends PApplet {
 		blobShapeRB.activate(0);
 		blobBrushTypeRB.activate(0);
 		lineBrushTypeRB.activate(0);
-		brushTypeRB.activate(0);
+//		brushTypeRB.activate(0);
 		bristleBrushTypeRB.activate(0);
 		brushShapeDD.setValue(0);
 
@@ -849,7 +910,7 @@ public class CF extends PApplet {
 	//*****************************************************************************************************************************
 
 	public void draw() {
-
+//		println("in cf should be drawing some buttons ");
 		fill (120,120,120);//erase all the left on buttons.....
 		rect (0,0,w,sBar);
 
@@ -873,9 +934,6 @@ public class CF extends PApplet {
 		int poopy = GB.picWidth;  //***********************clean this mess up and learn how to cast
 		float poop = (float) 210/poopy;
 		float tempH =  GB.picHeight*poop;
-		int tempHa = (int)tempH;
-//		image(GB.picture, col1+15, bBar+570, 210, tempHa);
-
 		if (GB.mousePressed ==true) {
 			GB.mousePressed = false;
 			onMouseSetPosRestrict();
@@ -886,10 +944,6 @@ public class CF extends PApplet {
 		int g = ((GB.mouseSelectedColor >> 8) & 0xFF)  ;
 		int b = GB.mouseSelectedColor  & 0xFF  ;
 		float[] hsb = Color.RGBtoHSB(r,g,b,null); // convert to hsb - now numbers between 0 and 1
-		int h = (int) (hsb[0]*255);
-		int s = (int) (hsb[1]*255);
-		int l = (int) (hsb[2]*255);
-
 		colorMode (HSB,255,255,255);
 		for(int i = 0; i<256; i++) {
 			stroke (i,255,255,255);
@@ -1120,38 +1174,6 @@ public class CF extends PApplet {
 			if (c.getGroup() == lineTypeRB) {
 				lineType = (int) c.getValue();
 			}
-			if  (c.getGroup() == velocityKindDD) {
-				velocityKind = (int) c.getValue();
-			}
-
-			if  (c.getGroup() == velocityTypeDD) {
-				velocityType = (int) c.getValue();
-				if((velocityType == 1) || (velocityType == 2) || (velocityType == 3) || (velocityType == 4)){//any of the Angle from Color types
-					if(velocityType ==1)	saa.setVisible(true);
-					velocityKindDD.setVisible(true);
-					velocityKindL.setVisible(true);}
-				else {
-					saa.setVisible(false);
-					velocityKindDD.setVisible(false);
-					velocityKindL.setVisible(false);
-					//		    		strokeSpeedS.setVisible(true);
-				}
-			}
-
-			
-  			if  (c.getGroup() == startPosTypeDD) {
-				startPosType = (int) c.getValue();
-				if(startPosType == 1) { gridResXS.setVisible(true);gridResYS.setVisible(true);gridResXRanS.setVisible(true);gridResYRanS.setVisible(true);}
-				else{gridResXS.setVisible(false);gridResYS.setVisible(false);gridResXRanS.setVisible(false);gridResYRanS.setVisible(false);}
-			}
-
-
-
-			if  (c.getGroup() == startPosResDD)  { 
-				startPosResType = (int) c.getValue();
-				if(startPosResType == 3) {startPosResRange.setVisible(false);}
-				else {startPosResRange.setVisible(true);}
-			}
 
 			if  (c.getGroup() == strokeTypeRB) {
 				strokeType = (int) c.getValue();
@@ -1164,57 +1186,6 @@ public class CF extends PApplet {
 			}
 		
 			
-			if  (c.getGroup() == svc) { 
-				strokeVaryControl = (int) c.getValue(); 
-			}
-
-
-			if (c.getGroup()== brushShapeDD) {
-				whichBrush = (int) c.getValue();
-				switch (whichBrush) {
-				case 0:
-					GB.rawBrush = loadImage(GB.brush1);
-					break;
-				case 1:
-					GB.rawBrush = loadImage(GB.brush2);
-					break;
-				case 2:
-					GB.rawBrush = loadImage(GB.brush3);
-					break;
-				case 3:
-					GB.rawBrush = loadImage(GB.brush4);
-					break;
-				case 4:
-					GB.rawBrush = loadImage(GB.brush5);
-					break;
-				case 5:
-					GB.rawBrush = loadImage(GB.brush6);
-					break;
-				case 6:
-					GB.rawBrush = loadImage(GB.brush7);
-					break;
-				case 7:
-					GB.rawBrush = loadImage(GB.brush8);
-					break;
-				case 8:
-					GB.rawBrush = loadImage(GB.brush9);
-					break;
-				case 9:
-					GB.rawBrush = loadImage(GB.brush10);
-					break;
-				case 10:
-					GB.rawBrush = loadImage(GB.brush11);
-					break;
-				case 11:
-					GB.rawBrush = loadImage(GB.brush12);
-					break;
-				case 12:
-					GB.rawBrush = loadImage(GB.brush13);
-					break;
-				}
-				GB.bW = GB.rawBrush.width;
-				GB.bH = GB.rawBrush.height;
-			} 
 			
 
 			if (c.getGroup() == StvCb) {
@@ -1278,7 +1249,7 @@ public class CF extends PApplet {
 
 			if (c.getGroup() == cts) {
 				copyTrifromSource =  (int) c.getValue();
-				println("copy tri from source is now "+copyTrifromSource);
+//				println("copy tri from source is now "+copyTrifromSource);
 			}
 			
 			if (c.getGroup() == cp1) {
@@ -1294,12 +1265,12 @@ public class CF extends PApplet {
 				Balph  = (int)(c.getArrayValue(3));
 			}
 
-			if  (c.getGroup() == dd8) {  	
-				colorBlendType = (int) c.getValue();  
-			}
+
+			
+			
 		}//end if c.isGroup
 
-		
+
 
 
 		if (c.isController()) {// is c (the control event) a controller.....(as opposed to a group above)
@@ -1379,12 +1350,122 @@ public class CF extends PApplet {
 			  
 		}
 	}//end event controller
-
-
-///************functions for turning groups of controllers on and off
 	
+	
+///*************************************** new stuff for the former Drop Down Lists that are now ScrollableLists after the whatever depreciation
+
+	
+	public void StartPosType (int n) {
+		cp5.get(ScrollableList.class, "StartPosType").getItem(n);
+		startPosType = n;
+		println("StartPosType is now: "+ n);
+		if(n == 1) { 
+			gridResXS.setVisible(true);
+			gridResYS.setVisible(true);
+			gridResXRanS.setVisible(true);
+			gridResYRanS.setVisible(true);}
+		else{
+			gridResXS.setVisible(false);
+			gridResYS.setVisible(false);
+			gridResXRanS.setVisible(false);
+			gridResYRanS.setVisible(false);}
+	}
+	
+	public void VelocityKind (int n) {
+		cp5.get(ScrollableList.class, "VelocityKind").getItem(n);
+		velocityKind = n;
+		println("velocityKind is now: "+ n);
+	}
+
+	public void strokeVaryControl (int n) {
+		cp5.get(ScrollableList.class, "strokeVaryControl").getItem(n);
+		strokeVaryControl = n;
+		println("strokeVary Control is now: "+ n);
+	}
+
+	public void colorBlendType (int n) {
+		cp5.get(ScrollableList.class, "colorBlendType").getItem(n);
+		colorBlendType = n;
+		println("colorBlendType is now: "+ n);
+	}
+	
+
+	public void VelocityType (int n) {
+		cp5.get(ScrollableList.class,  "VelocityType").getItem(n);
+		velocityType = n;
+		println("velocityType is now: "+ n);
+
+		if((velocityType == 1) || (velocityType == 2) || (velocityType == 3) || (velocityType == 4)){//any of the Angle from Color types
+			if(velocityType ==1) {	
+				saa.setVisible(true);
+				velocityKindDD.setVisible(true);
+//				velocityKindL.setVisible(true);
+				}
+			else {
+				saa.setVisible(false);
+				velocityKindDD.setVisible(false);
+//				velocityKindL.setVisible(false);
+				}
+			}
+		}
+		
+
+	
+	
+	public void BrushShape (int n) {
+		cp5.get(ScrollableList.class,  "BrushShape").getItem(n);
+		println("Brush shape is now: "+ n);
+	
+		whichBrush = n;
+		switch (whichBrush) {
+		case 0:
+			GB.rawBrush = loadImage(GB.brush1);
+			break;
+		case 1:
+			GB.rawBrush = loadImage(GB.brush2);
+			break;
+		case 2:
+			GB.rawBrush = loadImage(GB.brush3);
+			break;
+		case 3:
+			GB.rawBrush = loadImage(GB.brush4);
+			break;
+		case 4:
+			GB.rawBrush = loadImage(GB.brush5);
+			break;
+		case 5:
+			GB.rawBrush = loadImage(GB.brush6);
+			break;
+		case 6:
+			GB.rawBrush = loadImage(GB.brush7);
+			break;
+		case 7:
+			GB.rawBrush = loadImage(GB.brush8);
+			break;
+		case 8:
+			GB.rawBrush = loadImage(GB.brush9);
+			break;
+		case 9:
+			GB.rawBrush = loadImage(GB.brush10);
+			break;
+		case 10:
+			GB.rawBrush = loadImage(GB.brush11);
+			break;
+		case 11:
+			GB.rawBrush = loadImage(GB.brush12);
+			break;
+		case 12:
+			GB.rawBrush = loadImage(GB.brush13);
+			break;
+		}
+		GB.bW = GB.rawBrush.width;
+		GB.bH = GB.rawBrush.height;
+	} 
+	
+///************functions for turning groups of controllers on and off
+
 	void turnBristleOn() {
-		println("turning bristle on");
+//		println("turning bristle on");
 		bristleBrushTypeRB.setVisible(true);
 		bristleBrushTypeL.setVisible(true);
 		brushRotateSL.setVisible(true);
@@ -1393,14 +1474,14 @@ public class CF extends PApplet {
 	}
 
 	void turnBristleOff() {
-		println("turnBristleOff");
+//		println("turnBristleOff");
 		bristleBrushTypeRB.setVisible(false);
 		bristleBrushTypeL.setVisible(false);
 		turnBristleOptionsOff();
 	}
 	
 	void turnBristleOptionsOff() {
-		println("turnBristleOptionsOff");
+//		println("turnBristleOptionsOff");
 		turnBrushSSSROff();
 		smudgePer.setVisible(false);
 		turnhsbVarOff();
@@ -1457,10 +1538,18 @@ public class CF extends PApplet {
 	
 	
 	void turnBrushSSSROn() {
-		brushShapeDD.setVisible(true);	brushShapeL.setVisible(true);	brushSizeSL.setVisible(true);	brushSkewXSL.setVisible(true);	brushRotateSL.setVisible(true);
+		brushShapeDD.setVisible(true);	
+		//brushShapeL.setVisible(true);	
+		brushSizeSL.setVisible(true);	
+		brushSkewXSL.setVisible(true);	
+		brushRotateSL.setVisible(true);
 	}
 	void turnBrushSSSROff() {
-		brushShapeDD.setVisible(false);	brushShapeL.setVisible(false);	brushSizeSL.setVisible(false);	brushSkewXSL.setVisible(false);	brushRotateSL.setVisible(false);
+		brushShapeDD.setVisible(false);	
+		//brushShapeL.setVisible(false);	
+		brushSizeSL.setVisible(false);	
+		brushSkewXSL.setVisible(false);	
+		brushRotateSL.setVisible(false);
 	}
 	
 	
@@ -1496,7 +1585,7 @@ public class CF extends PApplet {
 	}
 	
 	void turnSizeOn() {
-		println("turnSizeOn");
+//		println("turnSizeOn");
 		sizehsbCB.setVisible(true);
 		sizehsbRB.setVisible(true);
 		sizeageRB.setVisible(true);
@@ -1506,7 +1595,7 @@ public class CF extends PApplet {
 		hueCenterSL.setVisible(true);
 	}
 	void turnSizeOff() {
-		println("turnSizeOff");
+//		println("turnSizeOff");
 		sizehsbCB.setVisible(false);
 		sizehsbRB.setVisible(false);
 		sizeageRB.setVisible(false);

@@ -1,144 +1,370 @@
 package postContemp;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 
+import javax.imageio.ImageIO;
 import javax.media.opengl.GL2;
 
 import jogamp.opengl.x11.glx.GLX;
-import controlP5.ControlP5;
-import controlP5.Textlabel;
+
+import controlP5.*;
+import sojamo.drop.*;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PImage;
-
+import processing.core.PVector;
 
 public class PostContemp extends PApplet {
 	
-	//where all the globals are!  i know, i know. 
-	//currently includes 	the original picture, 
-	//					 	myCanvas work is done in, 
-	//						the fmap that controls flows ect, 
-	//						and brushes
-	global testglobal;
-	
-	// saved file with - a frame number will be added - it ends out in /bin
-   	String savefile = "saved";		 
-    int frame = 0;    //frame counter appended to the for saved files
-    
-    
-  	//the display is a screen view into myCanvas as it is constructed
-	DisplayWindow theDisplay;  
-	float screensize_factor = (float) 0.3;//% the display window is of the picture being drawn
-	
-	//the panel with all the controls and its various variables
-	//the variables are not in the globals file - but there are static getters for each
-	ControlFrame cf1;
-	String control_panel_name = "PostContemporary";
-   	int control_panel_width = 550;
-   	int control_panel_height = 600;
-   	int control_panel_x = 3200 - control_panel_width - 100;
-   	int control_panel_y = 100;
-   	
- 
- 	
-   	//temporary variables used for testing until classes and controls are finalized
+	//seems i need this function - i don't understand why
+	public static void main(String[] args) {
+		String[] a = { "MAIN" };
+		PApplet.runSketch(a, new PostContemp());
+	}
 
-	
+	// set up where most the globals are! i know, i know.
+	// Notes: globals set on the control panels are in CF.java or CF2.java
+	// GB.java has all the other globals (like picture and working buffers....
+	// and sizes)
+	GB myglobals;
+	CF cf1;
+	CF2 cf2;
 
+	static Frame f;
+	static Frame f2;
+
+	static String pictureUrl;
+
+	// the display is a screen view into GB.myCanvas, when GB.myCanvas is bigger
+	// than theDisplay,
+	// controls for pan and zoom are keyboard driven (see GB.externalInput())
+	// the % of myCanvas shown in the Display is set with GB.screensizeFactor
+	DisplayWindow theDisplay;
+
+	// used to control the speed of stroke creation - and allow killstrokes to
+	// do so gracefully
+	int maxNewStrokes = 10;
+	int animFrame = 0;
+	int animFramel = 1;
+	boolean flag = false;
 	
+	public void settings() {
+		size(5616 / 3, 3744 / 3);
+		// size (1900,1266);
+	}
+
 	public void setup() {
-		// set the source picture that is to be "postContemporarized"		
-		global.thefile = "ben4.jpg";
-		// and for the time being name the brush file
-		global.brush = "newtest32brush.png";
+		// setup a timer in case you want to time stuff.
+		int time = millis() / 1000;
 
-		//now setup all the global variables
-		testglobal = new global(this);	
-		
-		// set up the display window - which is probably smaller than the actual picture
-		theDisplay = new DisplayWindow(global.picWidth,global.picHeight, screensize_factor);
+		// get the file names for the two files to be mucked with
+		// selectInput starts a seperate thread - so the two slector boxes get
+		// stacked - so i call them in reverse order
+		selectInput("Select a alternate file to process:", "altPictureSelected");
+		selectInput("Select a primary file to process:", "thePictureSelected");
 
-        size((int) (global.picWidth*screensize_factor), (int) (global.picHeight*screensize_factor)); 												//should be P2D but it crashes!
-		colorMode (RGB,255,255,255);	
-		
-		//setup the control panel
-		cf1 = addControlFrame(control_panel_name, control_panel_width, control_panel_height,control_panel_x,control_panel_y );
-		
-		// set up the strokes
-		for(int i=0; i<global.theStrokes.length; i++) {
-			global.theStrokes[i] = new Stroke(this,global.rawBrush);
+		// so we won't do anything until we have two files
+		// should do something about making sure they are the same size - if
+		// they aren't nothing works
+		while (GB.thefile == null || GB.thealtfile == null) {
+			delay(1000);
 		}
-		println("there should be a total of "+global.theStrokes.length+" strokes");
 
-	
+		// setup all the GB global variables - well not quite all, they are in
+		// GB, globals that are controlled by the interface are in CF and CF2
+		myglobals = new GB(this);
+
+		// set up the display window - which is probably smaller than the actual
+		// picture
+		// start things off with a full view - where the screen shows the full
+		// picture - at a lower res of course
+		theDisplay = new DisplayWindow();
 		theDisplay.fullview();
-		
-	}//end setup
 
-	
+		// HSB is the default colorMode - but it does get changed here and
+		// there. Some calcs are easier in RGB
+		colorMode(HSB, 255, 255, 255);
+
+		// setup the control panels and initialize all the CF and CF2 variables
+		// **************************** the name of the window does not seem to
+		// be working
+		cf1 = new CF(this, 1240, 1700, "Pastiche");
+		// seems that i need a bit of a delay ? before setting up the second
+		// controlFrame
+		delay(1000);
+		cf2 = new CF2(this, 1240, 300, "P control");
+
+	}// end setup
+
 	public void draw() {
-	
-		//update the screen view into myCanvas so we can see at least part what is going on 
-		theDisplay.update(this); 
+		 
+		//first time through - move the main screen to 0,0  
+		if (!flag) {
+			    surface.setLocation(0, 0);
+			    flag = true;
+			  }
 		
-		//update all of the current strokes, if one stroke is finished restart it
-		for(int i=0; i<global.theStrokes.length; i++) {
-			global.theStrokes[i].updateStroke(this);
-			if(global.theStrokes[i].endStroke == true) {
-				global.theStrokes[i] = new Stroke(this,global.rawBrush);
+		
+		// update the screen view - that is look into myCanvas in full half or
+		// zoom modes (keyboard below - to change)
+		theDisplay.update(this);
+		
+		// if the user pressed CF2 Stop New  -stop generating new strokes, wait for all the strokes to die and then turn drawPaused on
+		if (CF2.killNewStrokes == true) {
+			if (GB.theStrokes.size() == 0) {
+				CF2.drawPaused = true;
+				CF2.runRB.activate(1);// turn on the drawPaused button
+				CF2.killNewStrokes = false;
 			}
 		}
+
+		// if the user pressed CF2 Kill Strokes - remove all existing strokes an turn pause on
+		if (CF2.killAllStrokes == true) {
+			for (int i = GB.theStrokes.size() - 1; i > -1; i--) {
+				GB.theStrokes.remove(i);
+			}
+			CF2.killAllStrokes = false;
+			CF2.runRB.activate(1);// turn on the drawPaused button
+			CF2.drawPaused = true;
+		}
+
+		// if the user selected a different kind of brush in CF  you have to remove all the existing strokes!!!
+		if (CF.newBrush == true) {// 
+			for (int i = GB.theStrokes.size() - 1; i > -1; i--) {
+				GB.theStrokes.remove(i);
+			}
+			CF.newBrush = false;
+		}
+
 		
-		//display the frame rate
-//		if (frameCount % 10 == 0) {println(frameRate+"    "+frameCount);}
-	   	   
-	}//end draw
-	
+		//now assuming the drawing is not paused we process all the strokes - and create new ones if needed
+		if (CF2.drawPaused == false) {
+			
+			// create strokes if you need them BUT Never more than MaxNewStrokes at a time  or things get slow
+			int newStrokesCreated = 0;
+			maxNewStrokes = 20;
+			while ((GB.theStrokes.size() < CF.numOfStrokes) && (newStrokesCreated < maxNewStrokes)
+					&& (CF2.killNewStrokes == false)) {
+				switch (CF.strokeType) {
+				case 0:
+					GB.theStrokes.add(new Stroke(this));
+					break;
+				case 1:
+					GB.theStrokes.add(new curveStroke(this));
+					break;
+				case 2:
+					GB.theStrokes.add(new contAngStroke(this));
+					break;
+				}
+				newStrokesCreated++;
 
+			}
+			
+			if (GB.newStrokeFailed == true) {// newStrokeFailed is set to true in Stroke IFF the conditions for a new stroke can't be meet!!!!
+				GB.newStrokeFailed = false; // reset the flag
+				if (CF2.killNewStrokes = false)
+					CF2.killNewStrokes = true;
+				CF2.runRB.activate(2);// turn on the drawKilled button
+			} else {
+				// and update all the strokes that are running
+				GB.outputCanvas.beginDraw();
+				for (int i = 0; i < GB.theStrokes.size(); i++) {
+					Stroke currentStroke = GB.theStrokes.get(i);
+					if (currentStroke.strokeIsDead == true) {
+						GB.theStrokes.remove(i);
+					} else {
+						currentStroke.updateStroke(this);
+					}
+				}
+				GB.outputCanvas.endDraw();
+			}
+			CF.strokeAngleAdjust = (float) (CF.strokeAngleAdjust + 0.00085);
+			
+			//once in a while save a frame  ********************** should have to pic a directory and have some sort of time control
+			if (frameCount % 2000 == 0) {
+				println("saving a frame after each 2000");
+				GB.outputCanvas.save("C:\\users\\baa\\desktop\\saved\\" + "spotsave" + GB.frame + ".jpg");
+			}
+			
+		} // end if drawPaused
 
-
-public void keyPressed() {  // used to move the screen display around the graphics buffer - or save a version to a file
-	if (key == CODED) {
-		theDisplay.zoomPosition(keyCode);
+		if (GB.showFrameRate == true) { // display the frame rate in the Console
+										// view - should put this in the control
+										// panel******
+			if (frameCount % 500 == 0) {
+				println("frameRate " + frameRate + "    " + frameCount + "  frameCount " + frameCount);
+			}
+			// if (frameCount % 2000 == 0)
+			// {GB.outputCanvas.save(GB.saveFileName+frameCount);}
 		}
-	switch(key) {
-	   case 's' : 
-		   	frame++;
-		   	global.myCanvas.save("saved"+frame);
-		  break;	
-	   case 'f' : // set the screen view window to cover the entire picture
-		    theDisplay.fullview();
-		  break;
-	   case 'h' : // set the screen view window to cover the entire picture
-		    theDisplay.halfview();
-		  break;
-	   case 'z' : // reset screen view window to the center of the picture
-		    theDisplay.zoomview();	
-		    break;
-	   case 'w' :
-		   global.myCanvas.background(255); // set to white
-		   break;
-	   case 'b' :
-		   global.myCanvas.background(0); // set to black
-           break;
-	}//end switch
-}//end keypressed	
 
-//Control Frame setup and stuff
-	ControlFrame addControlFrame(String theName, int theWidth, int theHeight, int thex, int they) {
-			  Frame f = new Frame(theName);
-			  ControlFrame p = new ControlFrame(this, theWidth, theHeight);
-			  f.add(p);
-			  p.init();
-			  f.setTitle(theName);
-			  f.setSize(p.w, p.h);
-			  f.setLocation(thex, they);
-			  f.setResizable(false);
-			  f.setVisible(true);
-			  return p;
+		if (CF.doCanvasCopy == true) {
+			CF.doCanvasCopy = false;
+			DisplayWindow.canvasCopy(this);
 		}
-	
-	
-}//end PostContemporary
+
+		if (CF.doMeshDisplay == true) {
+			CF.doMeshDisplay = false;
+			MeshMap.displaySomeMesh(this);
+		}
+
+		if (CF2.meshRecalc == true) {
+			// be sure all strokes are dead - because if any stroke referes to
+			// the meshmap it will be effed up after a new mesh is created
+			for (int i = GB.theStrokes.size() - 1; i > -1; i--) {
+				GB.theStrokes.remove(i);
+			}
+			GB.triNum = 0;// start over with any display in order to avoid a out
+							// of bounds error
+			GB.theMeshMap = new MeshMap(this, CF2.meshMode, CF2.mThreshold, CF2.mResolution);
+			GB.theMeshMap.displaySolidMesh(this); // draws the mesh onto the
+													// screen - does not effect
+													// myCanvas
+		}
+
+	}// end draw
+
+	// function to deal with the mouse - it's a mess
+	public void mousePressed() {
+		// clicking on the screen will set the hsb start position restrictions
+		// on CF....
+		// first remap the mouse as the pixels of the display are probably not
+		// the same as the actual picture
+		int mValueX = (int) PApplet.map(mouseX, 0, 1920, DisplayWindow.screen_locx,
+				DisplayWindow.screen_locx + DisplayWindow.displayW);
+		int mValueY = (int) PApplet.map(mouseY, 0, 1280, DisplayWindow.screen_locy,
+				DisplayWindow.screen_locy + DisplayWindow.displayH);
+		// and just in case let's make sure we are still in bounds - print a
+		// message just so you know why it crashed.
+		if ((mValueX > GB.picWidth) || (mValueY > GB.picHeight)) {
+			println("something is wrong in mousePressed ****** you should not be able to get here *******************");
+		}
+
+		// *************************************************************** TOTAL
+		// HACK - need to think this through - later *****************
+
+		if (CF.copyTrifromSource != -1) {
+			PVector mpoint = new PVector(mValueX, mValueY);
+			int trinum = MeshMap.findTriNum(this, mpoint);
+			println(trinum);
+			if (trinum == -1) {
+				println("this should not happen - was this a tri that got added with the CF2 add boarder tri switch?");
+			} else {
+				// GB.workCanvas.beginDraw();
+				MeshMap.fillaTri(this, trinum);
+				MeshMap.copyTriChunk(this, trinum);
+				// GB.workCanvas.endDraw();
+			}
+		}
+		// ***************************************************
+
+		// now get the color under the mouse from the screen that is displayed
+		switch (CF.posResFrom) {// mouseSelectedColor used to set min max values
+								// for hsb in CF.onMouseSetPosRestrict ()
+								// that are then used for restrictions in
+								// Stroke.isPosLegal
+		case 0:
+			GB.mouseSelectedColor = GB.thePicture.pixels[mValueY * GB.picWidth + mValueX];
+			break;
+		case 1:
+			GB.mouseSelectedColor = GB.altPicture.pixels[mValueY * GB.picWidth + mValueX];
+			break;
+		case 2:
+			GB.mouseSelectedColor = GB.workCanvas.pixels[mValueY * GB.picWidth + mValueX];
+			break;
+		case 3:
+			GB.mouseSelectedColor = GB.controlCanvas.pixels[mValueY * GB.picWidth + mValueX];
+			break;
+		case 4:
+			GB.mouseSelectedColor = GB.outputCanvas.pixels[mValueY * GB.picWidth + mValueX];
+			break;
+		}
+		GB.mousePressed = true;
+
+		// if we are in list mode (creating a list for StrokeStartPosition to
+		// follow) get and store all the info
+		if (CF2.createStartPositionList == true) {
+			// if this is the first point don't do the "back fill"
+			if (CF2.newlist == true) {
+				CF2.newlist = false;
+				if (GB.lineList.size() != 0) {
+					for (int i = GB.lineList.size(); i == 0; i--) {
+						GB.lineList.remove(i);
+					}
+				}
+			}
+
+			if (GB.lineList.size() == 0) {
+				PVector aPoint = new PVector(mValueX, mValueY);
+				GB.lineList.add(aPoint);
+				GB.workCanvas.fill(0, 0, 255, 255);
+				GB.workCanvas.ellipse(aPoint.x, aPoint.y, 10, 10);
+				println("created the first point in the list");
+			} else {
+				// on all other points figure out the number of previous points
+				// (based on CF.lineListInterval) and put them in the list
+				int index = GB.lineList.size() - 1;
+				PVector lastPoint = GB.lineList.get(index);
+				PVector newPoint = new PVector(mValueX, mValueY);
+				PVector dir = PVector.sub(newPoint, lastPoint);
+				dir.div(CF2.lineListIntervalNum);
+				for (int i = 0; i < CF2.lineListIntervalNum; i++) {
+					PVector nextPoint = new PVector(lastPoint.x, lastPoint.y);
+					lastPoint.add(dir);
+					PVector wtf = new PVector(lastPoint.x, lastPoint.y);
+					GB.lineList.add(wtf);
+					GB.workCanvas.beginDraw();
+					GB.workCanvas.fill(255, 0, 0, 255);
+					GB.workCanvas.ellipse(wtf.x, wtf.y, 10, 10);
+					GB.workCanvas.endDraw();
+					println("added a point to the list at " + lastPoint.x + " " + lastPoint.y + " now there should be "
+							+ GB.lineList.size());
+				}
+			}
+			// do something about looping the list!
+		}
+	}
+
+	// function to deal with the keyboard input
+	public void keyPressed() { // look after any keyboard input
+		println("a key was pressed");
+		GB.externalInput(key, keyCode);
+	}// end keypressed
+
+	// functions to turn on and off the two control frames
+	static void killCFs() {
+		f2.setVisible(false);
+		f.setVisible(false);
+	}
+
+	static void showCFs() {
+		f.setVisible(true);
+		f2.setVisible(true);
+	}
+
+	// functions to have user select files to be processed
+	public void thePictureSelected(File selection) {
+		if (selection == null) {
+			println("Window was closed or the user hit cancel.");
+		} else {
+			println("User selected thePicture " + selection.getAbsolutePath());
+			GB.thefile = selection.getAbsolutePath();
+		}
+	}
+
+	public void altPictureSelected(File selection) {
+		if (selection == null) {
+			println("Window was closed or the user hit cancel.");
+		} else {
+			println("User selected altPicture " + selection.getAbsolutePath());
+			GB.thealtfile = selection.getAbsolutePath();
+		}
+	}
+
+}// end Pastiche-O-Matic
