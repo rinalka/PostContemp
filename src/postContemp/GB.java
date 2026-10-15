@@ -38,8 +38,14 @@ public class GB {
 	public static int listNum = 0;
 	
 	public static String saveFileName;
+	//number of painting steps run for each screen refresh (+ and - keys)
+	public static int stepsPerFrame = 5;
 	public static int saveCount = 0;
 	public static int frame = 0;
+	//each run saves into its own dated folder so runs don't overwrite each other
+	public static String saveDir;
+	//painting steps done so far - auto save happens every saveCount steps
+	public static int paintSteps = 0;
 	
 	public static boolean showFrameRate;	
 	public static boolean mousePressed = false;
@@ -98,6 +104,10 @@ public class GB {
 		// set a name for the saved file  - a frame number is concatenated when saved, saveCount is number of frames between saves
 		saveFileName = "guit";
 		saveCount = 1000;
+		saveDir = "C:\\Users\\baaan\\Desktop\\postCon\\saved\\"
+				+ java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + "\\";
+		new java.io.File(saveDir).mkdirs();
+		PApplet.println("saving images to " + saveDir);
 		//frame counter appended to saved files - file is saved from the keyboard with 's' 
 		
 		// setup variables used to control the screen display zoom ect....
@@ -218,7 +228,7 @@ public class GB {
 		   case 's' : //save the current frame
 			   	GB.frame++;
 //				println("saving a frame after s key pressed");
-				GB.outputCanvas.save("C:\\Users\\baaan\\desktop\\saved\\" + "saveme"+ GB.frame +".jpg");
+				GB.outputCanvas.save(GB.saveDir + "saveme"+ GB.frame +".jpg");
 			  break;	
 		   case 'f' : // set the screen view window to cover the entire picture
 			   DisplayWindow.fullview();
@@ -242,6 +252,15 @@ public class GB {
 		   case ' ':
 			   if (CF2.drawPaused == true) { CF2.drawPaused = false; CF2.runRB.activate(0);}
 			   else { CF2.drawPaused = true; CF2.runRB.activate(1);}
+			   break;
+		   case '+':
+		   case '=':
+			   stepsPerFrame++;
+			   PApplet.println("painting steps per screen refresh: " + stepsPerFrame);
+			   break;
+		   case '-':
+			   if (stepsPerFrame > 1) stepsPerFrame--;
+			   PApplet.println("painting steps per screen refresh: " + stepsPerFrame);
 			   break;
 		   case 'x':
 			   	DisplayWindow.zoomin();

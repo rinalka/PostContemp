@@ -6,7 +6,6 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PVector;
 
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
 
 public class EdgeDetector {
 	/*

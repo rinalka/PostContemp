@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
 
 import processing.core.PApplet;
 import processing.core.PVector;

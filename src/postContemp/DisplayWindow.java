@@ -4,6 +4,7 @@ package postContemp;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PImage;
+import processing.awt.PGraphicsJava2D;
 
 public class DisplayWindow {
 	
@@ -14,7 +15,6 @@ public class DisplayWindow {
 	static int screen_locx;              // coords and size of the screen display
 	static int screen_locy;
 
-	PImage temp;     // temp storage for the part of the graphics buffer that will be displayed on the view panel
 	static  float zoomPercent = (float) .05;
 	static  float scrollPercent = (float) .05;
 	
@@ -32,33 +32,35 @@ public class DisplayWindow {
 	}
 	
 	 void update(PApplet p) {
-	   // copy a chunk from myCanvas and display it on the screen
-
+	   // draw the visible chunk of the selected buffer straight onto the screen
+	   // (used to copy the whole chunk with get() every frame, which was most of the frame time)
+		 PImage src = null;
 		 switch (CF.whichCanvas) {
-		 case 0: //pic
-			 temp = GB.thePicture.get(screen_locx,screen_locy,displayW,displayH);
-			 break;
-		 case 1: //alt pic
-			 temp = GB.altPicture.get(screen_locx,screen_locy,displayW,displayH);
-			 break;
-		 case 2: //tempCanvas ---work
-			 temp = GB.workCanvas.get(screen_locx,screen_locy,displayW,displayH);
-			 break;
-		 case 3: // contol --fmap
-			 temp = GB.controlCanvas.get(screen_locx,screen_locy,displayW,displayH);
-			 break;
-		 case 4: //output
-			 temp = GB.outputCanvas.get(screen_locx,screen_locy,displayW,displayH);
-			 break;
-		 case 5: // no canvas
-			 break;
-			 
+		 case 0: src = GB.thePicture; break;     //pic
+		 case 1: src = GB.altPicture; break;     //alt pic
+		 case 2: src = GB.workCanvas; break;     //tempCanvas ---work
+		 case 3: src = GB.controlCanvas; break;  // contol --fmap
+		 case 4: src = GB.outputCanvas; break;   //output
+		 case 5: break;                          // no canvas
 		 }
-	
-	   if (CF.whichCanvas != 5) {// if it's any canvas but no canvas show it
-		   p.image(temp,0,0,hold_displayW,hold_displayH);
-		  // p.removeCache(temp);
-	   }
+		 if (src == null) return;
+
+		 // the preview uses nearest neighbour scaling - java2d has a fast path for it, bicubic and bilinear both go through a slow one
+		 java.awt.Graphics2D g2 = ((PGraphicsJava2D) p.g).g2;
+		 Object oldHint = g2.getRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION);
+		 g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+
+		 if (src instanceof PGraphics && ((PGraphics) src).image != null) {
+			 // a canvas - draw its java2d image directly, no copy
+			 g2.drawImage(((PGraphics) src).image,
+					 0, 0, hold_displayW, hold_displayH,
+					 screen_locx, screen_locy, screen_locx + displayW, screen_locy + displayH, null);
+		 } else {
+			 // a loaded picture - processing caches it, so this is cheap
+			 p.image(src, 0, 0, hold_displayW, hold_displayH,
+					 screen_locx, screen_locy, screen_locx + displayW, screen_locy + displayH);
+		 }
+		 if (oldHint != null) g2.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, oldHint);
 	}
 	 
 	 static void zoomPosition( int kc) {

@@ -137,54 +137,59 @@ public class PostContemp extends PApplet {
 		//now assuming the drawing is not paused we process all the strokes - and create new ones if needed
 		if (CF2.drawPaused == false) {
 			
-			// create strokes if you need them BUT Never more than MaxNewStrokes at a time  or things get slow
-			int newStrokesCreated = 0;
-			maxNewStrokes = 20;
-			while ((GB.theStrokes.size() < CF.numOfStrokes) && (newStrokesCreated < maxNewStrokes)
-					&& (CF2.killNewStrokes == false)) {
-				switch (CF.strokeType) {
-				case 0:
-					GB.theStrokes.add(new Stroke(this));
-					break;
-				case 1:
-					GB.theStrokes.add(new curveStroke(this));
-					break;
-				case 2:
-					GB.theStrokes.add(new contAngStroke(this));
-					break;
-				}
-				newStrokesCreated++;
-
-			}
-			
-			if (GB.newStrokeFailed == true) {// newStrokeFailed is set to true in Stroke IFF the conditions for a new stroke can't be meet!!!!
-				GB.newStrokeFailed = false; // reset the flag
-				if (CF2.killNewStrokes = false)
-					CF2.killNewStrokes = true;
-				CF2.runRB.activate(2);// turn on the drawKilled button
-			} else {
-				// and update all the strokes that are running
-				GB.outputCanvas.beginDraw();
-				for (int i = 0; i < GB.theStrokes.size(); i++) {
-					Stroke currentStroke = GB.theStrokes.get(i);
-					if (currentStroke.strokeIsDead == true) {
-						GB.theStrokes.remove(i);
-					} else {
-						currentStroke.updateStroke(this);
+			// run several painting steps per screen refresh - the screen refresh is the slow part
+			// (GB.stepsPerFrame, change with + and - keys)
+			for (int step = 0; step < GB.stepsPerFrame && !CF2.drawPaused; step++) {
+				// create strokes if you need them BUT Never more than MaxNewStrokes at a time  or things get slow
+				int newStrokesCreated = 0;
+				maxNewStrokes = 20;
+				while ((GB.theStrokes.size() < CF.numOfStrokes) && (newStrokesCreated < maxNewStrokes)
+						&& (CF2.killNewStrokes == false)) {
+					switch (CF.strokeType) {
+					case 0:
+						GB.theStrokes.add(new Stroke(this));
+						break;
+					case 1:
+						GB.theStrokes.add(new curveStroke(this));
+						break;
+					case 2:
+						GB.theStrokes.add(new contAngStroke(this));
+						break;
 					}
+					newStrokesCreated++;
+
 				}
-				GB.outputCanvas.endDraw();
-			}
+			
+				if (GB.newStrokeFailed == true) {// newStrokeFailed is set to true in Stroke IFF the conditions for a new stroke can't be meet!!!!
+					GB.newStrokeFailed = false; // reset the flag
+					if (CF2.killNewStrokes = false)
+						CF2.killNewStrokes = true;
+					CF2.runRB.activate(2);// turn on the drawKilled button
+				} else {
+					// and update all the strokes that are running
+					GB.outputCanvas.beginDraw();
+					for (int i = 0; i < GB.theStrokes.size(); i++) {
+						Stroke currentStroke = GB.theStrokes.get(i);
+						if (currentStroke.strokeIsDead == true) {
+							GB.theStrokes.remove(i);
+						} else {
+							currentStroke.updateStroke(this);
+						}
+					}
+					GB.outputCanvas.endDraw();
+				}
+
+				//once in a while save a frame - counted in painting steps, so it doesn't depend on stepsPerFrame
+				GB.paintSteps++;
+				if (GB.paintSteps % GB.saveCount == 0) {
+					GB.frame++;
+					println("saving a frame after saveCount reached saving spotsave"+GB.frame);
+					GB.outputCanvas.save(GB.saveDir + "spotsave" + GB.frame + ".jpg");
+//					CF.strokeAngleAdjust = (float) (CF.strokeAngleAdjust + 0.025);
+				}
+			}// end steps
 //			CF.strokeAngleAdjust = (float) (CF.strokeAngleAdjust + 0.00085);
-			
-			//once in a while save a frame  ********************** should have to pic a directory and have some sort of time control
-			if (frameCount % GB.saveCount == 0) {
-				GB.frame++;
-				println("saving a frame after saveCount reached saving spotsave"+GB.frame);
-				GB.outputCanvas.save("C:\\users\\baaan\\desktop\\saved\\" + "spotsave" + GB.frame + ".jpg");
-//				CF.strokeAngleAdjust = (float) (CF.strokeAngleAdjust + 0.025);
-			}
-			
+
 		} // end if drawPaused
 
 		if (GB.showFrameRate == true) { // display the frame rate in the Console

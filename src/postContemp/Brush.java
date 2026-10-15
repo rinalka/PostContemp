@@ -7,7 +7,6 @@ package postContemp;
 import java.awt.Color;
 import java.awt.Component;
 
-import com.sun.javafx.geom.Shape;
 
 import processing.core.PApplet;
 import processing.core.PGraphics;
