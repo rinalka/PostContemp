@@ -46,3 +46,13 @@ Temporary Items
 # build output from run.bat, and the pre-speedup source backup
 /build/
 /backup-before-speedup-*/
+
+# old exported apps - regenerate them from Processing/Eclipse when needed.
+# controlP5.jar and sDrop.jar stay tracked because run.bat and .classpath use them.
+/application.linux/
+/application.macosx/
+/application.windows/*
+!/application.windows/lib/
+/application.windows/lib/*
+!/application.windows/lib/controlP5.jar
+!/application.windows/lib/sDrop.jar
